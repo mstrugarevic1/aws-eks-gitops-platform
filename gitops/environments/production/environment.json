@@ -1,0 +1,47 @@
+{
+  "name": "production",
+  "repoURL": "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git",
+  "targetRevision": "main",
+  "destinationServer": "https://kubernetes.default.svc",
+  "argocdNamespace": "argocd",
+  "aws": {
+    "accountId": "AWS_ACCOUNT_ID",
+    "region": "us-east-1",
+    "clusterName": "my-platform-production",
+    "vpcId": "VPC_ID",
+    "roles": {
+      "awsLoadBalancerController": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-production-alb-controller",
+      "clusterAutoscaler": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-production-cluster-autoscaler",
+      "externalSecrets": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-production-external-secrets",
+      "grafanaCloudWatch": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-production-grafana-cloudwatch"
+    }
+  },
+  "namespaces": {
+    "system": "kube-system",
+    "externalSecrets": "external-secrets",
+    "observability": "observability",
+    "app": "example-app"
+  },
+  "addons": {
+    "storageclass": true,
+    "metricsServer": true,
+    "awsLoadBalancerController": true,
+    "clusterAutoscaler": true,
+    "externalSecrets": true,
+    "observability": true
+  },
+  "apps": {
+    "exampleApp": false
+  },
+  "exampleApp": {
+    "valuesFile": "values-production.yaml",
+    "secretName": "example-app",
+    "secretManagerPath": "my-platform/production/example-app"
+  },
+  "syncPolicy": {
+    "automated": {
+      "prune": false,
+      "selfHeal": true
+    }
+  }
+}

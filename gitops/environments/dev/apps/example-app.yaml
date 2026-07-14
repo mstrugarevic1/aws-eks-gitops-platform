@@ -1,0 +1,27 @@
+apiVersion: "argoproj.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "dev-example-app"
+  namespace: "argocd"
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+  finalizers:
+    - "resources-finalizer.argocd.argoproj.io"
+spec:
+  project: "default"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "example-app"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - "CreateNamespace=true"
+  source:
+    repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+    targetRevision: "main"
+    path: "gitops/apps/example-app/chart"
+    helm:
+      valueFiles:
+        - "values-dev.yaml"

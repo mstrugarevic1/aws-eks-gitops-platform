@@ -1,0 +1,41 @@
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Terraform local/generated files
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/*.tfstate
+**/*.tfstate.*
+*.tfplan
+*.plan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+kubeconfig*
+*.kubeconfig
+argocd-repo-key*
+
+# Local tooling output
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+
+# Rendered local validation output
+*.rendered.yaml
+lessons_learned.md

@@ -1,0 +1,44 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "example-app.fullname" . }}
+  labels:
+    {{- include "example-app.labels" . | nindent 4 }}
+  annotations:
+    {{- $annotations := dict -}}
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{- $_ := set $annotations $key $value -}}
+    {{- end }}
+    {{- if .Values.ingress.certificateArn }}
+    {{- $_ := set $annotations "alb.ingress.kubernetes.io/certificate-arn" .Values.ingress.certificateArn -}}
+    {{- $_ := set $annotations "alb.ingress.kubernetes.io/listen-ports" "[{\"HTTP\":80},{\"HTTPS\":443}]" -}}
+    {{- $_ := set $annotations "alb.ingress.kubernetes.io/ssl-redirect" "443" -}}
+    {{- end }}
+    {{- toYaml $annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- if .Values.ingress.host }}
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "example-app.fullname" . }}
+                port:
+                  name: http
+    {{- else }}
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "example-app.fullname" . }}
+                port:
+                  name: http
+    {{- end }}
+{{- end }}

@@ -1,0 +1,47 @@
+{
+  "name": "staging",
+  "repoURL": "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git",
+  "targetRevision": "main",
+  "destinationServer": "https://kubernetes.default.svc",
+  "argocdNamespace": "argocd",
+  "aws": {
+    "accountId": "AWS_ACCOUNT_ID",
+    "region": "us-east-1",
+    "clusterName": "my-platform-staging",
+    "vpcId": "VPC_ID",
+    "roles": {
+      "awsLoadBalancerController": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-staging-alb-controller",
+      "clusterAutoscaler": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-staging-cluster-autoscaler",
+      "externalSecrets": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-staging-external-secrets",
+      "grafanaCloudWatch": "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-staging-grafana-cloudwatch"
+    }
+  },
+  "namespaces": {
+    "system": "kube-system",
+    "externalSecrets": "external-secrets",
+    "observability": "observability",
+    "app": "example-app"
+  },
+  "addons": {
+    "storageclass": true,
+    "metricsServer": true,
+    "awsLoadBalancerController": true,
+    "clusterAutoscaler": true,
+    "externalSecrets": true,
+    "observability": true
+  },
+  "apps": {
+    "exampleApp": true
+  },
+  "exampleApp": {
+    "valuesFile": "values-staging.yaml",
+    "secretName": "example-app",
+    "secretManagerPath": "my-platform/staging/example-app"
+  },
+  "syncPolicy": {
+    "automated": {
+      "prune": true,
+      "selfHeal": true
+    }
+  }
+}

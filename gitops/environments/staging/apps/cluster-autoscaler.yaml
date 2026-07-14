@@ -1,0 +1,30 @@
+apiVersion: "argoproj.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "staging-cluster-autoscaler"
+  namespace: "argocd"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - "resources-finalizer.argocd.argoproj.io"
+spec:
+  project: "default"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "kube-system"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  sources:
+    -
+      repoURL: "https://kubernetes.github.io/autoscaler"
+      chart: "cluster-autoscaler"
+      targetRevision: "*"
+      helm:
+        valueFiles:
+          - "$values/gitops/environments/staging/values/cluster-autoscaler-values.yaml"
+    -
+      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      targetRevision: "main"
+      ref: "values"

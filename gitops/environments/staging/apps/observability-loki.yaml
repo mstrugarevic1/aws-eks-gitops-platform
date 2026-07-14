@@ -1,0 +1,32 @@
+apiVersion: "argoproj.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "staging-observability-loki"
+  namespace: "argocd"
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+    - "resources-finalizer.argocd.argoproj.io"
+spec:
+  project: "default"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "observability"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - "CreateNamespace=true"
+  sources:
+    -
+      repoURL: "https://grafana.github.io/helm-charts"
+      chart: "loki"
+      targetRevision: "*"
+      helm:
+        valueFiles:
+          - "$values/../../deploy/observability/loki-values.yaml"
+    -
+      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      targetRevision: "main"
+      ref: "values"

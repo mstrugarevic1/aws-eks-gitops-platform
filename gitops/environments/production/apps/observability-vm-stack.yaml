@@ -1,0 +1,33 @@
+apiVersion: "argoproj.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "production-observability-vm-stack"
+  namespace: "argocd"
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+    - "resources-finalizer.argocd.argoproj.io"
+spec:
+  project: "default"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "observability"
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - "CreateNamespace=true"
+  sources:
+    -
+      repoURL: "https://victoriametrics.github.io/helm-charts/"
+      chart: "victoria-metrics-k8s-stack"
+      targetRevision: "*"
+      helm:
+        valueFiles:
+          - "$values/../../deploy/observability/victoria-metrics-k8s-stack-values.yaml"
+          - "$values/gitops/environments/production/values/vm-stack-values.yaml"
+    -
+      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      targetRevision: "main"
+      ref: "values"

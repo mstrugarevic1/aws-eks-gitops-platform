@@ -1,0 +1,9 @@
+autoDiscovery:
+  clusterName: "my-platform-dev"
+awsRegion: "us-east-1"
+rbac:
+  serviceAccount:
+    create: true
+    name: "cluster-autoscaler"
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-dev-cluster-autoscaler"

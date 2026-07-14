@@ -1,0 +1,8 @@
+clusterName: "my-platform-staging"
+region: "us-east-1"
+vpcId: "VPC_ID"
+serviceAccount:
+  create: true
+  name: "aws-load-balancer-controller"
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::AWS_ACCOUNT_ID:role/my-platform-staging-alb-controller"

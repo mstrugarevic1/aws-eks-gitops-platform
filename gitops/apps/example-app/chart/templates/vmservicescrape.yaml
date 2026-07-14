@@ -1,0 +1,16 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ include "example-app.fullname" . }}
+  labels:
+    {{- include "example-app.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "example-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  endpoints:
+    - port: http
+      path: {{ .Values.metrics.path }}
+{{- end }}

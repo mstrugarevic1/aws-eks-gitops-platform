@@ -1,0 +1,11 @@
+image:
+  repository: "public.ecr.aws/nginx/nginx"
+  tag: "latest"
+
+ingress:
+  certificateArn: ""
+  host: "example-app.example.com"
+
+config:
+  allowedHosts: "example-app.example.com"
+  corsAllowedOrigins: ""

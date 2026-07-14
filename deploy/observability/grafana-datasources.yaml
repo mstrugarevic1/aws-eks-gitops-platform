@@ -1,0 +1,26 @@
+# Extra Grafana datasources (Loki, CloudWatch), loaded by the Grafana sidecar via
+# the grafana_datasource label - the same mechanism that loads the VictoriaMetrics
+# datasource. The chart's grafana.additionalDataSources value is not rendered by
+# victoria-metrics-k8s-stack, so this ConfigMap is the reliable path.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources-extra
+  namespace: observability
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources-extra.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
+      - name: CloudWatch
+        uid: cloudwatch
+        type: cloudwatch
+        jsonData:
+          authType: default
+          defaultRegion: us-east-1

@@ -1,0 +1,6 @@
+# Helm values for the argo-cd chart (argoproj/argo-helm).
+# Kept minimal for the assignment. Production should add, at least:
+#   - server ingress / TLS and a real domain
+#   - SSO (OIDC/SAML) instead of the built-in admin user
+#   - RBAC policy restricting who can sync/manage applications
+#   - HA mode (redis-ha, replicas) for the API/repo/controller

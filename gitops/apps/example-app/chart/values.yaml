@@ -1,0 +1,59 @@
+replicaCount: 2
+
+image:
+  repository: "public.ecr.aws/nginx/nginx"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  annotations: {}
+  automountServiceAccountToken: false
+
+config:
+  debug: "False"
+  allowedHosts: ""
+  corsAllowedOrigins: ""
+
+secret:
+  name: example-app-app
+
+service:
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: alb
+  host: ""
+  certificateArn: ""
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+# Keep at most one pod down during voluntary disruptions (node drains, upgrades,
+# autoscaler consolidation). maxUnavailable pairs better with the HPA than a
+# fixed minAvailable, which can block scale-down.
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+metrics:
+  enabled: true
+  path: /metrics

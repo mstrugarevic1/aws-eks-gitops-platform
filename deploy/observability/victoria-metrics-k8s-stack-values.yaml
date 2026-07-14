@@ -1,0 +1,58 @@
+grafana:
+  enabled: true
+  # The VictoriaMetrics datasource uses the victoriametrics-metrics-datasource
+  # Grafana plugin; install it so the VM datasource (and the metric dashboards)
+  # work. Grafana downloads it at startup (needs egress through the NAT gateway).
+  plugins:
+    - victoriametrics-metrics-datasource
+  # Fixed name so the IRSA role trust can target this ServiceAccount.
+  # deploy-observability sets the eks.amazonaws.com/role-arn annotation.
+  serviceAccount:
+    create: true
+    name: grafana-cloudwatch
+  # GitOps env values add the CloudWatch IRSA annotation. Loki and CloudWatch
+  # datasources are provisioned via the sidecar ConfigMap in
+  # grafana-datasources.yaml (this chart does not render additionalDataSources).
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+
+vmsingle:
+  enabled: true
+  spec:
+    retentionPeriod: "14d"
+    storage:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 20Gi
+
+vmagent:
+  enabled: true
+  spec:
+    scrapeInterval: 30s
+
+# Install the standard kube-prometheus recording and alerting rules as VMRule
+# objects. Made explicit so it does not depend on chart defaults.
+defaultRules:
+  create: true
+
+# vmalert evaluates the rules: it computes recording-rule series and writes them
+# back into vmsingle, and fires alerts to Alertmanager. selectAllByDefault picks
+# up every VMRule in the namespace, including the app rules in vmrule-example-app.yaml.
+vmalert:
+  enabled: true
+  spec:
+    selectAllByDefault: true
+
+alertmanager:
+  enabled: true
+
+kube-state-metrics:
+  enabled: true
+
+prometheus-node-exporter:
+  enabled: true

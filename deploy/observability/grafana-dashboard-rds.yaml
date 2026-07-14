@@ -1,0 +1,585 @@
+# RDS PostgreSQL dashboard (CloudWatch). Avg+Max on latency/IOPS, storage and
+# memory thresholds, and burst-credit balances (t4g.micro + gp2). Loaded by the
+# Grafana sidecar via the grafana_dashboard label.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rds-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  rds.json: |
+    {
+      "title": "RDS PostgreSQL",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "graphTooltip": 1,
+      "tags": [
+        "rds",
+        "cloudwatch",
+        "aws"
+      ],
+      "time": {
+        "from": "now-3h",
+        "to": "now"
+      },
+      "templating": {
+        "list": []
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "CPU utilization",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "avg"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Database connections (max)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Maximum",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "connections"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Freeable memory",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "decimals": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 104857600
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "FreeableMemory",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "freeable"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "SwapUsage",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "swap"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Free storage space",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "decimals": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 2147483648
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "FreeStorageSpace",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "free"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "IOPS (read / write)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "iops",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "ReadIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "read avg"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "ReadIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Maximum",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "read max"
+            },
+            {
+              "refId": "C",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "WriteIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "write avg"
+            },
+            {
+              "refId": "D",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "WriteIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Maximum",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "write max"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency (read / write)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "ReadLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "read avg"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "ReadLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Maximum",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "read max"
+            },
+            {
+              "refId": "C",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "WriteLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "write avg"
+            },
+            {
+              "refId": "D",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "WriteLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Maximum",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "write max"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Burst balance (I/O % and CPU credits)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 20
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "B"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  },
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "right"
+                  },
+                  {
+                    "id": "custom.axisLabel",
+                    "value": "CPU credits"
+                  }
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "BurstBalance",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "BurstBalance %"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "namespace": "AWS/RDS",
+              "metricName": "CPUCreditBalance",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-platform-dev"
+              },
+              "statistic": "Average",
+              "region": "us-east-1",
+              "period": "60",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "matchExact": true,
+              "expression": "",
+              "id": "",
+              "label": "CPUCreditBalance"
+            }
+          ]
+        }
+      ]
+    }

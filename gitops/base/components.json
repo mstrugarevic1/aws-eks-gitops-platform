@@ -1,0 +1,129 @@
+{
+  "components": [
+    {
+      "name": "storageclass",
+      "enabledKey": "addons.storageclass",
+      "wave": -10,
+      "namespaceKey": "system",
+      "source": { "path": "deploy/storage" }
+    },
+    {
+      "name": "metrics-server",
+      "enabledKey": "addons.metricsServer",
+      "wave": -5,
+      "namespaceKey": "system",
+      "source": {
+        "chart": "metrics-server",
+        "repoURL": "https://kubernetes-sigs.github.io/metrics-server/",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "aws-load-balancer-controller",
+      "enabledKey": "addons.awsLoadBalancerController",
+      "wave": -5,
+      "namespaceKey": "system",
+      "valueFiles": ["values/aws-load-balancer-controller-values.yaml"],
+      "source": {
+        "chart": "aws-load-balancer-controller",
+        "repoURL": "https://aws.github.io/eks-charts",
+        "targetRevision": "1.9.2"
+      }
+    },
+    {
+      "name": "cluster-autoscaler",
+      "enabledKey": "addons.clusterAutoscaler",
+      "wave": -5,
+      "namespaceKey": "system",
+      "valueFiles": ["values/cluster-autoscaler-values.yaml"],
+      "source": {
+        "chart": "cluster-autoscaler",
+        "repoURL": "https://kubernetes.github.io/autoscaler",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "external-secrets",
+      "enabledKey": "addons.externalSecrets",
+      "wave": -5,
+      "namespaceKey": "externalSecrets",
+      "createNamespace": true,
+      "valueFiles": ["values/external-secrets-values.yaml"],
+      "source": {
+        "chart": "external-secrets",
+        "repoURL": "https://charts.external-secrets.io",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "external-secrets-manifests",
+      "enabledKey": "addons.externalSecrets",
+      "wave": 0,
+      "namespaceKey": "app",
+      "createNamespace": true,
+      "source": { "path": "manifests/external-secrets" }
+    },
+    {
+      "name": "observability-vm-stack",
+      "enabledKey": "addons.observability",
+      "wave": 10,
+      "namespaceKey": "observability",
+      "createNamespace": true,
+      "valueFiles": [
+        "../../deploy/observability/victoria-metrics-k8s-stack-values.yaml",
+        "values/vm-stack-values.yaml"
+      ],
+      "source": {
+        "chart": "victoria-metrics-k8s-stack",
+        "repoURL": "https://victoriametrics.github.io/helm-charts/",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "observability-loki",
+      "enabledKey": "addons.observability",
+      "wave": 10,
+      "namespaceKey": "observability",
+      "createNamespace": true,
+      "valueFiles": ["../../deploy/observability/loki-values.yaml"],
+      "source": {
+        "chart": "loki",
+        "repoURL": "https://grafana.github.io/helm-charts",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "observability-promtail",
+      "enabledKey": "addons.observability",
+      "wave": 10,
+      "namespaceKey": "observability",
+      "createNamespace": true,
+      "valueFiles": ["../../deploy/observability/promtail-values.yaml"],
+      "source": {
+        "chart": "promtail",
+        "repoURL": "https://grafana.github.io/helm-charts",
+        "targetRevision": "*"
+      }
+    },
+    {
+      "name": "observability-manifests",
+      "enabledKey": "addons.observability",
+      "wave": 11,
+      "namespaceKey": "observability",
+      "createNamespace": true,
+      "source": {
+        "path": "deploy/observability",
+        "include": "{grafana-dashboard-*.yaml,grafana-datasources.yaml}"
+      }
+    },
+    {
+      "name": "example-app",
+      "enabledKey": "apps.exampleApp",
+      "wave": 20,
+      "namespaceKey": "app",
+      "createNamespace": true,
+      "valueFilesFromEnv": ["exampleApp.valuesFile"],
+      "source": { "path": "gitops/apps/example-app/chart" }
+    }
+  ]
+}
