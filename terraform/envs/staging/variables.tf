@@ -7,7 +7,7 @@ variable "project" {
 variable "environment" {
   type        = string
   description = "Environment name."
-  default     = "dev"
+  default     = "staging"
 }
 
 variable "aws_region" {
@@ -23,17 +23,17 @@ variable "azs" {
 
 variable "vpc_cidr" {
   type    = string
-  default = "10.10.0.0/16"
+  default = "10.20.0.0/16"
 }
 
 variable "public_subnet_cidrs" {
   type    = list(string)
-  default = ["10.10.1.0/24", "10.10.2.0/24"]
+  default = ["10.20.1.0/24", "10.20.2.0/24"]
 }
 
 variable "private_subnet_cidrs" {
   type    = list(string)
-  default = ["10.10.11.0/24", "10.10.12.0/24"]
+  default = ["10.20.11.0/24", "10.20.12.0/24"]
 }
 
 variable "nat_gateway_strategy" {

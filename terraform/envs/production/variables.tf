@@ -7,7 +7,7 @@ variable "project" {
 variable "environment" {
   type        = string
   description = "Environment name."
-  default     = "dev"
+  default     = "production"
 }
 
 variable "aws_region" {
@@ -18,43 +18,43 @@ variable "aws_region" {
 variable "azs" {
   type        = list(string)
   description = "Availability zones for this environment."
-  default     = ["us-east-1a", "us-east-1b"]
+  default     = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
 variable "vpc_cidr" {
   type    = string
-  default = "10.10.0.0/16"
+  default = "10.30.0.0/16"
 }
 
 variable "public_subnet_cidrs" {
   type    = list(string)
-  default = ["10.10.1.0/24", "10.10.2.0/24"]
+  default = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
 }
 
 variable "private_subnet_cidrs" {
   type    = list(string)
-  default = ["10.10.11.0/24", "10.10.12.0/24"]
+  default = ["10.30.11.0/24", "10.30.12.0/24", "10.30.13.0/24"]
 }
 
 variable "nat_gateway_strategy" {
   type        = string
   description = "Use single for cost-sensitive environments or per_az for higher availability."
-  default     = "single"
+  default     = "per_az"
 }
 
 variable "node_desired_size" {
   type    = number
-  default = 2
+  default = 3
 }
 
 variable "node_min_size" {
   type    = number
-  default = 1
+  default = 2
 }
 
 variable "node_max_size" {
   type    = number
-  default = 4
+  default = 6
 }
 
 variable "eks_endpoint_public_access" {
