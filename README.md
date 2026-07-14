@@ -1,6 +1,6 @@
 # eks-argocd-platform-boilerplate
 
-[![Checks](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml/badge.svg)](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml)
+[![checks](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml/badge.svg?branch=main&event=push)](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml)
 
 This is a learning portfolio project and reusable multi-environment AWS EKS platform boilerplate using Terraform, ArgoCD App of Apps, Helm, and GitOps.
 
