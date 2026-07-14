@@ -1,0 +1,19 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: azure/setup-helm@v4
+
+      - name: Check repository
+        run: make check

@@ -20,7 +20,7 @@ spec:
     -
       repoURL: "https://kubernetes-sigs.github.io/metrics-server/"
       chart: "metrics-server"
-      targetRevision: "*"
+      targetRevision: "3.13.1"
     -
       repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
       targetRevision: "main"

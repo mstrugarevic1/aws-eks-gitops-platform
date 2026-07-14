@@ -22,7 +22,7 @@ spec:
     -
       repoURL: "https://grafana.github.io/helm-charts"
       chart: "promtail"
-      targetRevision: "*"
+      targetRevision: "6.17.1"
       helm:
         valueFiles:
           - "$values/../../deploy/observability/promtail-values.yaml"

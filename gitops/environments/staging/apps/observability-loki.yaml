@@ -22,7 +22,7 @@ spec:
     -
       repoURL: "https://grafana.github.io/helm-charts"
       chart: "loki"
-      targetRevision: "*"
+      targetRevision: "7.0.0"
       helm:
         valueFiles:
           - "$values/../../deploy/observability/loki-values.yaml"

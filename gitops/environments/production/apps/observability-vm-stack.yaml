@@ -22,7 +22,7 @@ spec:
     -
       repoURL: "https://victoriametrics.github.io/helm-charts/"
       chart: "victoria-metrics-k8s-stack"
-      targetRevision: "*"
+      targetRevision: "0.86.0"
       helm:
         valueFiles:
           - "$values/../../deploy/observability/victoria-metrics-k8s-stack-values.yaml"

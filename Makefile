@@ -6,7 +6,7 @@ TF_DIR := terraform/envs/$(ENV)
 BACKEND_CONFIG := ../../../bootstrap/backend-$(ENV).hcl
 GITOPS_ENV_DIR := gitops/environments/$(ENV)
 
-.PHONY: bootstrap init fmt fmt-check validate plan apply destroy clean configure-gitops-values gitops-render gitops-validate deploy-argocd apply-argocd-apps render-observability
+.PHONY: bootstrap init fmt fmt-check validate plan apply destroy clean check configure-gitops-values gitops-render gitops-validate deploy-argocd apply-argocd-apps render-observability
 
 bootstrap:
 	./bootstrap/bootstrap.sh $(PROJECT) $(ENV) $(AWS_REGION)
@@ -35,6 +35,15 @@ destroy:
 clean:
 	find terraform -type d -name ".terraform" -prune -exec rm -rf {} +
 	find terraform -type f -name ".terraform.lock.hcl" -delete
+
+check: fmt-check
+	python3 -m py_compile scripts/gitops.py
+	python3 -m json.tool gitops/base/components.json >/tmp/components.json
+	python3 -m json.tool gitops/environments/environments.json >/tmp/environments.json
+	for env in dev staging production; do python3 -m json.tool gitops/environments/$$env/environment.json >/tmp/$$env-environment.json; done
+	for env in dev staging production; do $(MAKE) gitops-render ENV=$$env; done
+	helm lint gitops/apps/example-app/chart
+	helm template example-app gitops/apps/example-app/chart --values gitops/apps/example-app/chart/values-dev.yaml >/tmp/example-app.yaml
 
 configure-gitops-values:
 	@set -e; \
