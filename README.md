@@ -1,6 +1,6 @@
 # eks-argocd-platform-boilerplate
 
-[![Lint](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/lint.yml/badge.svg)](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/lint.yml)
+[![Checks](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml/badge.svg)](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml)
 
 This is a learning portfolio project and reusable multi-environment AWS EKS platform boilerplate using Terraform, ArgoCD App of Apps, Helm, and GitOps.
 
