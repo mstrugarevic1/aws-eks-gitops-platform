@@ -1,6 +1,6 @@
 {
   "name": "staging",
-  "repoURL": "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git",
+  "repoURL": "git@github.com:mstrugarevic1/eks-gitops-platform.git",
   "targetRevision": "main",
   "destinationServer": "https://kubernetes.default.svc",
   "argocdNamespace": "argocd",
@@ -35,6 +35,10 @@
   },
   "exampleApp": {
     "valuesFile": "values-staging.yaml",
+    "image": {
+      "repository": "ECR_REPOSITORY_URL",
+      "tag": "0.1.0"
+    },
     "secretName": "example-app",
     "secretManagerPath": "my-platform/staging/example-app"
   },

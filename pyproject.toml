@@ -1,0 +1,14 @@
+# Only tooling configuration. There is no Python package to build here: the
+# repository ships one helper script, one small example app and its tests.
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [".terraform", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests import gitops after adjusting sys.path, which E402 flags.
+"tests/*" = ["E402"]

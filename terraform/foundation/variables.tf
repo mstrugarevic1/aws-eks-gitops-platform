@@ -23,11 +23,12 @@ variable "github_environment" {
 
 variable "ecr_repository_name" {
   type        = string
-  description = "ECR repository name GitHub Actions can push to."
-  default     = "example-app-dev"
+  description = "ECR repository GitHub Actions may push to. Must match the ecr_repository_name output of the target environment, which is \"<project>-<environment>/example-app\"."
+  default     = "my-platform-dev/example-app"
 }
 
 variable "role_name" {
-  type    = string
-  default = "example-ecr-push"
+  type        = string
+  description = "Name of the IAM role GitHub Actions assumes through OIDC."
+  default     = "my-platform-ecr-push"
 }

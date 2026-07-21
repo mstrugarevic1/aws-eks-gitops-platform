@@ -33,6 +33,12 @@ variable "backup_retention_days" {
   description = "Backup retention in days."
 }
 
+variable "db_name" {
+  type        = string
+  description = "Initial database created on the instance."
+  default     = "app"
+}
+
 variable "db_username" {
   type        = string
   description = "Database admin username."

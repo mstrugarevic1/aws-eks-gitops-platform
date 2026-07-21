@@ -19,6 +19,15 @@ resource "aws_subnet" "public" {
   availability_zone       = var.azs[count.index]
   map_public_ip_on_launch = true
 
+  # Cross-variable checks live here because variable validation blocks may not
+  # reference another variable on Terraform 1.5.
+  lifecycle {
+    precondition {
+      condition     = length(var.public_subnet_cidrs) == length(var.azs)
+      error_message = "public_subnet_cidrs must contain one CIDR per availability zone."
+    }
+  }
+
   tags = merge(
     { Name = "${var.name}-public-${count.index + 1}" },
     var.kubernetes_cluster_name == "" ? {} : {
@@ -33,6 +42,13 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
+
+  lifecycle {
+    precondition {
+      condition     = length(var.private_subnet_cidrs) == length(var.azs)
+      error_message = "private_subnet_cidrs must contain one CIDR per availability zone."
+    }
+  }
 
   tags = merge(
     { Name = "${var.name}-private-${count.index + 1}" },

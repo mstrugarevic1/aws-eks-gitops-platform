@@ -22,6 +22,6 @@ spec:
       chart: "metrics-server"
       targetRevision: "3.13.1"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"

@@ -1,22 +1,50 @@
+# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+#
+# project must match PROJECT in the Makefile: AWS resource names, the ECR
+# repository and the Secrets Manager path are all derived from
+# "<project>-<environment>" and "<project>/<environment>".
+
 project     = "my-platform"
 environment = "dev"
+
 aws_region = "us-east-1"
 azs        = ["us-east-1a", "us-east-1b"]
 
 vpc_cidr             = "10.10.0.0/16"
 public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
 private_subnet_cidrs = ["10.10.11.0/24", "10.10.12.0/24"]
+
+# single = one NAT gateway for the whole VPC (cheaper, single AZ failure domain)
+# per_az = one NAT gateway per AZ (higher availability, one hourly charge each)
 nat_gateway_strategy = "single"
 
-# Replace with the operator/VPN CIDR that is allowed to reach the EKS API.
+# Required, no default. Replace 203.0.113.10/32 with the operator or VPN address
+# allowed to reach the public EKS API endpoint. 203.0.113.0/24 is the RFC 5737
+# documentation range and will not match your real address.
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
-node_desired_size = 2
-node_min_size     = 1
-node_max_size     = 4
+kubernetes_version  = "1.35"
+node_instance_types = ["t3.medium"]
+node_desired_size   = 2
+node_min_size       = 1
+node_max_size       = 4
 
 rds_instance_class        = "db.t4g.micro"
 rds_allocated_storage     = 20
 rds_backup_retention_days = 3
-rds_deletion_protection   = true
-rds_skip_final_snapshot   = false
+rds_db_name               = "app"
+
+# Demo defaults for dev: cheap and easy to tear down. Use the staging or
+# production example values before storing anything you care about.
+rds_multi_az            = false
+rds_deletion_protection = false
+rds_skip_final_snapshot = true
+
+# Demo defaults: destroy removes the ECR repository even if it still holds
+# images, and deletes the application secret immediately instead of keeping a
+# recovery window (which would block recreating it under the same name).
+ecr_force_delete         = true
+app_secret_recovery_days = 0
+
+# Email for CloudWatch alarm notifications. Leave empty to skip the subscription.
+alarm_email = ""

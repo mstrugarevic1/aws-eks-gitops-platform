@@ -1,11 +1,10 @@
-image:
-  repository: "public.ecr.aws/nginx/nginx"
-  tag: "latest"
+# Production values. image.repository/image.tag come from
+# gitops/environments/production/environment.json (exampleApp.image).
 
 ingress:
   certificateArn: ""
   host: "example-app.example.com"
 
 config:
-  allowedHosts: "example-app.example.com"
-  corsAllowedOrigins: ""
+  appEnv: "production"
+  logLevel: "INFO"

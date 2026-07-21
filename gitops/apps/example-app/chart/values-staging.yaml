@@ -1,11 +1,10 @@
-image:
-  repository: "public.ecr.aws/nginx/nginx"
-  tag: "latest"
+# Staging values. image.repository/image.tag come from
+# gitops/environments/staging/environment.json (exampleApp.image).
 
 ingress:
   certificateArn: ""
   host: "example-app.staging.example.com"
 
 config:
-  allowedHosts: "example-app.staging.example.com"
-  corsAllowedOrigins: ""
+  appEnv: "staging"
+  logLevel: "INFO"

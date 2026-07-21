@@ -27,6 +27,6 @@ spec:
         valueFiles:
           - "$values/../../deploy/observability/loki-values.yaml"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"
