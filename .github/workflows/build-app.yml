@@ -28,7 +28,7 @@ jobs:
 
       # Role created by terraform/foundation. Its ARN is a repository variable,
       # not a secret: it is not a credential on its own.
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
