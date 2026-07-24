@@ -128,6 +128,23 @@ rds_skip_final_snapshot  = false
 Add-ons are enabled per environment in
 `gitops/environments/<env>/environment.json`.
 
+The example app workload type is selected in
+`gitops/apps/example-app/chart/values-<env>.yaml`:
+
+```yaml
+workload:
+  mode: stateless
+```
+
+Supported values:
+
+- `stateless`: renders a Kubernetes `Deployment`.
+- `stateful`: renders a Kubernetes `StatefulSet` with one `gp3` persistent
+  volume claim per pod.
+
+Keep `stateless` for the first deployment. Use `stateful` when you specifically
+want to test persistent workload behavior and storage cleanup.
+
 After Terraform apply, run:
 
 ```bash

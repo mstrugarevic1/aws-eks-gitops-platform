@@ -12,6 +12,9 @@
 #
 # Keep ingress.host and ingress.certificateArn empty for this mode.
 
+workload:
+  mode: stateless
+
 ingress:
   # Empty means the ALB accepts requests for its generated DNS name.
   certificateArn: ""

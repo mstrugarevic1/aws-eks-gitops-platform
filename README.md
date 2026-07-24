@@ -33,6 +33,9 @@ ArgoCD manages the Kubernetes side:
 - optional observability manifests already present in GitOps config;
 - a small example application chart.
 
+The example application can run as either a stateless `Deployment` or a
+stateful `StatefulSet` with a persistent volume claim. The default is stateless.
+
 ## Architecture
 
 ![EKS GitOps platform architecture](architecture.png)
@@ -154,6 +157,17 @@ make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 
 Observability can be enabled or disabled per environment in
 `gitops/environments/<env>/environment.json`.
+
+The example application workload type is selected in the environment values
+file:
+
+```yaml
+workload:
+  mode: stateless
+```
+
+Use `stateful` to render a `StatefulSet` with a `gp3` persistent volume claim
+per pod.
 
 This repository currently provisions PostgreSQL through the `rds` module. It
 does not currently include Redis, MySQL, Aurora, MSK, OpenSearch, DocumentDB, or
