@@ -24,11 +24,6 @@ jobs:
 
   terraform:
     runs-on: ubuntu-latest
-    needs: discover
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: ${{ fromJSON(needs.discover.outputs.environments) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,10 +37,10 @@ jobs:
 
       # -backend=false keeps this offline: no S3 bucket, no AWS credentials.
       - name: terraform init
-        run: terraform -chdir=terraform/envs/${{ matrix.environment }} init -backend=false
+        run: terraform -chdir=terraform/stack init -backend=false
 
       - name: terraform validate
-        run: terraform -chdir=terraform/envs/${{ matrix.environment }} validate
+        run: terraform -chdir=terraform/stack validate
 
       - uses: terraform-linters/setup-tflint@v4
         with:

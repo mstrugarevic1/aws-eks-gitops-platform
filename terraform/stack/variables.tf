@@ -1,65 +1,53 @@
 variable "project" {
   type        = string
   description = "Short project slug used for AWS resource names. Must match PROJECT in the Makefile."
-  default     = "my-platform"
 }
 
 variable "environment" {
   type        = string
   description = "Environment name."
-  default     = "dev"
 }
 
 variable "aws_region" {
-  type    = string
-  default = "us-east-1"
+  type = string
 }
 
 variable "azs" {
   type        = list(string)
   description = "Availability zones for this environment."
-  default     = ["us-east-1a", "us-east-1b"]
 }
 
 variable "vpc_cidr" {
-  type    = string
-  default = "10.10.0.0/16"
+  type = string
 }
 
 variable "public_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.10.1.0/24", "10.10.2.0/24"]
+  type = list(string)
 }
 
 variable "private_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.10.11.0/24", "10.10.12.0/24"]
+  type = list(string)
 }
 
 variable "nat_gateway_strategy" {
   type        = string
   description = "Use single for cost-sensitive environments or per_az for higher availability."
-  default     = "single"
 }
 
 variable "node_desired_size" {
-  type    = number
-  default = 2
+  type = number
 }
 
 variable "node_min_size" {
-  type    = number
-  default = 1
+  type = number
 }
 
 variable "node_max_size" {
-  type    = number
-  default = 4
+  type = number
 }
 
 variable "eks_endpoint_public_access" {
-  type    = bool
-  default = true
+  type = bool
 }
 
 variable "eks_public_access_cidrs" {
@@ -73,44 +61,36 @@ variable "eks_public_access_cidrs" {
 }
 
 variable "rds_instance_class" {
-  type    = string
-  default = "db.t4g.micro"
+  type = string
 }
 
 variable "rds_allocated_storage" {
-  type    = number
-  default = 20
+  type = number
 }
 
 variable "rds_backup_retention_days" {
-  type    = number
-  default = 3
+  type = number
 }
 
 variable "rds_username" {
-  type    = string
-  default = "app"
+  type = string
 }
 
 variable "rds_multi_az" {
-  type    = bool
-  default = false
+  type = bool
 }
 
 variable "rds_deletion_protection" {
-  type    = bool
-  default = false
+  type = bool
 }
 
 variable "rds_skip_final_snapshot" {
-  type    = bool
-  default = true
+  type = bool
 }
 
 variable "alarm_email" {
   type        = string
   description = "Email address to notify on CloudWatch alarms. Leave empty to skip the email subscription."
-  default     = ""
 }
 
 variable "tags" {
@@ -122,35 +102,29 @@ variable "tags" {
 variable "kubernetes_version" {
   type        = string
   description = "EKS Kubernetes control plane version. Keep the cluster-autoscaler image tag in gitops/base/components.json aligned with this."
-  default     = "1.35"
 }
 
 variable "node_instance_types" {
   type        = list(string)
   description = "Managed node group instance types."
-  default     = ["t3.medium"]
 }
 
 variable "rds_db_name" {
   type        = string
   description = "Initial PostgreSQL database created on the instance."
-  default     = "app"
 }
 
 variable "ecr_force_delete" {
   type        = bool
   description = "Delete the ECR repository on destroy even if it still holds images. Convenient for demo environments, unsafe for production."
-  default     = true
 }
 
 variable "app_secret_recovery_days" {
   type        = number
   description = "Secrets Manager recovery window for the application secret. 0 deletes immediately (demo, allows instant recreate); 7-30 keeps a recovery window."
-  default     = 0
 }
 
 variable "alb_controller_version" {
   type        = string
   description = "AWS Load Balancer Controller release used to fetch the official IAM policy. Must match the chart version in gitops/base/components.json."
-  default     = "v3.4.2"
 }

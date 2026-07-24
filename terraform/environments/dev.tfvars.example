@@ -1,4 +1,4 @@
-# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+# Copy to dev.tfvars and edit. *.tfvars files are gitignored.
 #
 # project must match PROJECT in the Makefile: AWS resource names, the ECR
 # repository and the Secrets Manager path are all derived from
@@ -21,6 +21,7 @@ nat_gateway_strategy = "single"
 # Required, no default. Replace 203.0.113.10/32 with the operator or VPN address
 # allowed to reach the public EKS API endpoint. 203.0.113.0/24 is the RFC 5737
 # documentation range and will not match your real address.
+eks_endpoint_public_access = true
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
 kubernetes_version  = "1.35"
@@ -32,6 +33,7 @@ node_max_size       = 4
 rds_instance_class        = "db.t4g.micro"
 rds_allocated_storage     = 20
 rds_backup_retention_days = 3
+rds_username              = "app"
 rds_db_name               = "app"
 
 # Demo defaults for dev: cheap and easy to tear down. Use the staging or
@@ -45,6 +47,8 @@ rds_skip_final_snapshot = true
 # recovery window (which would block recreating it under the same name).
 ecr_force_delete         = true
 app_secret_recovery_days = 0
+
+alb_controller_version = "v3.4.2"
 
 # Email for CloudWatch alarm notifications. Leave empty to skip the subscription.
 alarm_email = ""

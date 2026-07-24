@@ -1,34 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0, < 2.0.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.100"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.1"
-    }
-    http = {
-      source  = "hashicorp/http"
-      version = "~> 3.4"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = merge(var.tags, {
-      Project     = var.project
-      Environment = var.environment
-      ManagedBy   = "terraform"
-    })
-  }
-}
-
 locals {
   # Every AWS resource name in this environment derives from this prefix.
   name = "${var.project}-${var.environment}"
@@ -43,7 +12,7 @@ locals {
 }
 
 module "network" {
-  source                  = "../../modules/network"
+  source                  = "../modules/network"
   name                    = local.name
   vpc_cidr                = var.vpc_cidr
   azs                     = var.azs
@@ -54,7 +23,7 @@ module "network" {
 }
 
 module "eks" {
-  source                   = "../../modules/eks"
+  source                   = "../modules/eks"
   name                     = local.name
   kubernetes_version       = var.kubernetes_version
   private_subnet_ids       = module.network.private_subnet_ids
@@ -76,7 +45,7 @@ module "eks" {
 # `make configure-app-secret ENV=<env>`.
 
 module "rds" {
-  source                      = "../../modules/rds"
+  source                      = "../modules/rds"
   name                        = local.name
   vpc_id                      = module.network.vpc_id
   private_subnet_ids          = module.network.private_subnet_ids
@@ -342,7 +311,7 @@ resource "aws_eks_addon" "ebs_csi" {
 }
 
 module "observability" {
-  source           = "../../modules/observability"
+  source           = "../modules/observability"
   name             = local.name
   eks_cluster_name = module.eks.cluster_name
   rds_identifier   = local.name

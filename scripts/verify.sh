@@ -13,7 +13,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 env="$1"
-tf_dir="terraform/envs/${env}"
+tf_dir="terraform/stack"
 env_json="gitops/environments/${env}/environment.json"
 
 for tool in aws kubectl jq python3; do

@@ -13,7 +13,7 @@ For `project = "my-platform"` and `environment = "dev"` that is
 
 | Where | How it is set |
 | ----- | ------------- |
-| Terraform | `app_secret_name = "${var.project}/${var.environment}/example-app"` in `terraform/envs/<env>/main.tf` |
+| Terraform | `app_secret_name = "${var.project}/${var.environment}/example-app"` in `terraform/stack/main.tf` |
 | Terraform output | `app_secret_name` |
 | GitOps | `exampleApp.secretManagerPath` in `gitops/environments/<env>/environment.json` |
 

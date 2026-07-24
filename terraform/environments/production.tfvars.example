@@ -1,4 +1,4 @@
-# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+# Copy to production.tfvars and edit. *.tfvars files are gitignored.
 
 project     = "my-platform"
 environment = "production"
@@ -13,6 +13,7 @@ nat_gateway_strategy = "per_az"
 
 # Required, no default. Restrict to the operator or VPN CIDR. Consider setting
 # eks_endpoint_public_access = false and reaching the API over a VPN instead.
+eks_endpoint_public_access = true
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
 kubernetes_version  = "1.35"
@@ -24,6 +25,7 @@ node_max_size       = 6
 rds_instance_class        = "db.t4g.small"
 rds_allocated_storage     = 50
 rds_backup_retention_days = 14
+rds_username              = "app"
 rds_db_name               = "app"
 rds_multi_az              = true
 rds_deletion_protection   = true
@@ -31,5 +33,7 @@ rds_skip_final_snapshot   = false
 
 ecr_force_delete         = false
 app_secret_recovery_days = 30
+
+alb_controller_version = "v3.4.2"
 
 alarm_email = "platform-alerts@example.com"

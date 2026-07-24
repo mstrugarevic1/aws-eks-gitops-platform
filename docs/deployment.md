@@ -20,10 +20,10 @@ Also needed: a Git remote that ArgoCD can read. See [gitops.md](gitops.md).
 ## 1. Configure the environment
 
 ```bash
-cp terraform/envs/dev/terraform.tfvars.example terraform/envs/dev/terraform.tfvars
+cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
 ```
 
-`terraform.tfvars` is gitignored. At minimum set:
+`terraform/environments/dev.tfvars` is gitignored. At minimum set:
 
 ```hcl
 project     = "my-platform"
@@ -182,7 +182,7 @@ make verify ENV=dev
 ## Adding an environment
 
 ```bash
-cp -R terraform/envs/dev terraform/envs/sandbox
+cp terraform/environments/dev.tfvars.example terraform/environments/sandbox.tfvars.example
 cp -R gitops/environments/dev gitops/environments/sandbox
 ```
 
@@ -192,7 +192,7 @@ Register it in `gitops/environments/environments.json`:
 { "environments": ["dev", "staging", "production", "sandbox"] }
 ```
 
-Then update `terraform/envs/sandbox/terraform.tfvars.example` (a non-overlapping
+Then update `terraform/environments/sandbox.tfvars.example` (a non-overlapping
 `vpc_cidr`) and `gitops/environments/sandbox/environment.json` (`name`,
 `aws.clusterName`, `exampleApp.secretManagerPath`, `exampleApp.valuesFile`), add
 `gitops/apps/example-app/chart/values-sandbox.yaml`, and render:
