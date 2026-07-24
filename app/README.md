@@ -21,7 +21,7 @@ From the ConfigMap rendered by the Helm chart:
 | `PORT`      | `8000`    | listen port                      |
 
 From the Kubernetes Secret produced by the `ExternalSecret`
-(see [docs/secrets.md](../docs/secrets.md)):
+(see [docs/deployment.md](../docs/deployment.md#6-fill-the-application-secret)):
 
 | Variable         | Meaning                                                   |
 | ---------------- | --------------------------------------------------------- |
