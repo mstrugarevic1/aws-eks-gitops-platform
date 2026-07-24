@@ -16,31 +16,7 @@ That file is committed, and ArgoCD reads it from Git.
 
 ## Flow
 
-```mermaid
-flowchart LR
-    engineer[Engineer] --> tf[Terraform]
-    engineer --> git[(Git repository)]
-
-    tf --> aws[AWS: VPC, EKS, RDS, ECR, Secrets Manager, IAM/IRSA]
-    tf -- outputs --> git
-
-    gha[GitHub Actions] -- push image --> ecr[ECR]
-    engineer --> gha
-
-    engineer -- helm install --> argocd[ArgoCD]
-    git -- pull manifests --> argocd
-    argocd --> addons[Add-ons and workloads]
-
-    addons --> eso[External Secrets Operator]
-    eso -- IRSA --> sm[Secrets Manager]
-    eso --> k8ssecret[Kubernetes Secret]
-    k8ssecret --> app[example-app]
-    ecr -- image --> app
-    app --> rds[(RDS PostgreSQL)]
-
-    addons --> grafana[Grafana]
-    grafana -- IRSA --> cw[CloudWatch]
-```
+![EKS GitOps platform architecture](../architecture.png)
 
 ## Sync waves
 

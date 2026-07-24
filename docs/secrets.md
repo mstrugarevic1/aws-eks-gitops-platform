@@ -65,15 +65,7 @@ so passwords containing shell or URL metacharacters survive intact.
 
 ## How they reach the pod
 
-```mermaid
-flowchart LR
-    tf[Terraform] -- creates empty --> sm[Secrets Manager]
-    cmd[make configure-app-secret] -- writes keys --> sm
-    rds[(RDS master secret)] --> cmd
-    eso[External Secrets Operator] -- IRSA, no access key --> sm
-    eso --> k8s[Kubernetes Secret]
-    k8s -- envFrom --> pod[example-app pod]
-```
+![Secret flow through the EKS GitOps platform](../architecture.png)
 
 ArgoCD applies two manifests, rendered into
 `gitops/environments/<env>/manifests/external-secrets/`:
