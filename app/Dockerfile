@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim AS build
+FROM python:3.14-slim AS build
 
 WORKDIR /install
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install/prefix -r requirements.txt
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # UID/GID must match the pod securityContext in the Helm chart
 # (gitops/apps/example-app/chart/templates/deployment.yaml).
