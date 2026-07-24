@@ -129,19 +129,36 @@ eks_public_access_cidrs = ["203.0.113.10/32"]
 Then run:
 
 ```bash
+# Create or reuse the remote Terraform state backend.
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
+
+# Initialize and check the shared Terraform stack.
 make init ENV=dev
 make validate ENV=dev
+
+# Review and apply the AWS infrastructure changes.
 make plan ENV=dev
 make apply ENV=dev
+
+# Point kubectl at the new EKS cluster.
 make kubeconfig ENV=dev
+
+# Fill the application secret without printing secret values.
 make configure-app-secret ENV=dev
+
+# Install ArgoCD before handing Kubernetes resources to GitOps.
 make deploy-argocd ENV=dev
+
+# Write Terraform outputs into the GitOps environment config.
 make configure-gitops-values ENV=dev
 make gitops-validate ENV=dev
+
+# Commit the generated GitOps environment changes for ArgoCD to read.
 git add gitops/
 git commit -m "chore: configure dev GitOps values"
 git push
+
+# Apply the root ArgoCD application and check the running environment.
 make apply-argocd-apps ENV=dev
 make verify ENV=dev
 ```
@@ -172,28 +189,6 @@ per pod.
 This repository currently provisions PostgreSQL through the `rds` module. It
 does not currently include Redis, MySQL, Aurora, MSK, OpenSearch, DocumentDB, or
 a service catalog layer.
-
-## Validation
-
-Run local static checks with:
-
-```bash
-make check
-```
-
-Run Terraform checks for one environment with:
-
-```bash
-make init ENV=dev
-make validate ENV=dev
-make plan ENV=dev
-```
-
-Run live cluster checks after deployment with:
-
-```bash
-make verify ENV=dev
-```
 
 ## Destroy
 
