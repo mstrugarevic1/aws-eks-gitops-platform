@@ -1,18 +1,18 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.5.0, < 2.0.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 5.100"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0"
+      version = "~> 4.1"
     }
     http = {
       source  = "hashicorp/http"
-      version = "~> 3.0"
+      version = "~> 3.4"
     }
   }
 }
@@ -30,7 +30,16 @@ provider "aws" {
 }
 
 locals {
+  # Every AWS resource name in this environment derives from this prefix.
   name = "${var.project}-${var.environment}"
+
+  # Secrets Manager path for the example application secret. The same value is
+  # written into gitops/environments/<env>/environment.json as
+  # exampleApp.secretManagerPath, so ExternalSecret and Terraform always agree.
+  app_secret_name = "${var.project}/${var.environment}/example-app"
+
+  # ECR repository for the example application image.
+  ecr_repository_name = "${local.name}/example-app"
 }
 
 module "network" {
@@ -45,20 +54,26 @@ module "network" {
 }
 
 module "eks" {
-  source                 = "../../modules/eks"
-  name                   = local.name
-  private_subnet_ids     = module.network.private_subnet_ids
-  node_desired_size      = var.node_desired_size
-  node_min_size          = var.node_min_size
-  node_max_size          = var.node_max_size
-  endpoint_public_access = var.eks_endpoint_public_access
-  public_access_cidrs    = var.eks_public_access_cidrs
+  source                   = "../../modules/eks"
+  name                     = local.name
+  kubernetes_version       = var.kubernetes_version
+  private_subnet_ids       = module.network.private_subnet_ids
+  node_instance_types      = var.node_instance_types
+  node_desired_size        = var.node_desired_size
+  node_min_size            = var.node_min_size
+  node_max_size            = var.node_max_size
+  endpoint_public_access   = var.eks_endpoint_public_access
+  public_access_cidrs      = var.eks_public_access_cidrs
+  ecr_repository_name      = local.ecr_repository_name
+  ecr_force_delete         = var.ecr_force_delete
+  app_secret_name          = local.app_secret_name
+  app_secret_recovery_days = var.app_secret_recovery_days
 }
 
 # RDS generates and stores the master password in Secrets Manager, so no
-# password is passed in or kept in Terraform state. The app secret (created
-# empty by the eks module) is filled from that managed secret by
-# `make put-app-secret`.
+# password is passed in or kept in Terraform state. The application secret is
+# created empty here and filled from that managed secret by
+# `make configure-app-secret ENV=<env>`.
 
 module "rds" {
   source                      = "../../modules/rds"
@@ -66,6 +81,7 @@ module "rds" {
   vpc_id                      = module.network.vpc_id
   private_subnet_ids          = module.network.private_subnet_ids
   allowed_security_group_ids  = [module.eks.cluster_security_group_id]
+  db_name                     = var.rds_db_name
   instance_class              = var.rds_instance_class
   allocated_storage           = var.rds_allocated_storage
   backup_retention_days       = var.rds_backup_retention_days
@@ -101,7 +117,7 @@ data "aws_iam_policy_document" "eso_assume" {
 }
 
 resource "aws_iam_role" "eso" {
-  name               = "${local.name}-eso"
+  name               = "${local.name}-external-secrets"
   assume_role_policy = data.aws_iam_policy_document.eso_assume.json
 }
 
@@ -119,9 +135,10 @@ resource "aws_iam_role_policy" "eso" {
 }
 
 # IRSA role for the AWS Load Balancer Controller. The permissions policy is the
-# official one for controller v2.9.2; keep the Helm chart aligned to that version.
+# official one for the controller version pinned in gitops/base/components.json
+# (chart 3.4.2 ships controller v3.4.2). Bump both together.
 data "http" "alb_controller_policy" {
-  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.9.2/docs/install/iam_policy.json"
+  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${var.alb_controller_version}/docs/install/iam_policy.json"
 }
 
 resource "aws_iam_policy" "alb_controller" {

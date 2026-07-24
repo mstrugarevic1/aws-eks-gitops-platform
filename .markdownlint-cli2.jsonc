@@ -1,0 +1,16 @@
+{
+  "config": {
+    // Long lines are normal in tables and command examples.
+    "MD013": false,
+    // Duplicate headings are fine across different sections of a long guide.
+    "MD024": { "siblings_only": true },
+    // The first heading is the title; the repository name is not a sentence.
+    "MD041": true,
+    // Inline HTML is not used, but Mermaid fences are, and those are fine.
+    "MD046": { "style": "fenced" }
+  },
+  "ignores": [
+    "**/node_modules/**",
+    "**/.terraform/**"
+  ]
+}

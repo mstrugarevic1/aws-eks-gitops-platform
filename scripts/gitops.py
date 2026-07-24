@@ -112,6 +112,10 @@ def app_manifest(env, component):
     }
     value_files = [repo_path(env, p) for p in component.get("valueFiles", [])]
     value_files += [nested_get(env, p) for p in component.get("valueFilesFromEnv", [])]
+    parameters = [
+        {"name": p["name"], "value": nested_get(env, p["valueRef"])}
+        for p in component.get("helmParametersFromEnv", [])
+    ]
 
     if "chart" in source:
         chart_source = {
@@ -119,8 +123,13 @@ def app_manifest(env, component):
             "chart": source["chart"],
             "targetRevision": source["targetRevision"],
         }
+        helm = {}
         if value_files:
-            chart_source["helm"] = {"valueFiles": [f"$values/{p}" for p in value_files]}
+            helm["valueFiles"] = [f"$values/{p}" for p in value_files]
+        if parameters:
+            helm["parameters"] = parameters
+        if helm:
+            chart_source["helm"] = helm
         spec["sources"] = [
             chart_source,
             {
@@ -137,8 +146,13 @@ def app_manifest(env, component):
         }
         if "include" in source:
             app_source["directory"] = {"include": source["include"]}
+        helm = {}
         if value_files:
-            app_source["helm"] = {"valueFiles": value_files}
+            helm["valueFiles"] = value_files
+        if parameters:
+            helm["parameters"] = parameters
+        if helm:
+            app_source["helm"] = helm
         spec["source"] = app_source
 
     return {
@@ -291,7 +305,14 @@ def unresolved(value):
     if isinstance(value, list):
         return any(unresolved(v) for v in value)
     if isinstance(value, str):
-        placeholders = ("AWS_ACCOUNT_ID", "AWS_REGION", "VPC_ID", "CERTIFICATE_ID", "REPLACE_ME")
+        placeholders = (
+            "AWS_ACCOUNT_ID",
+            "AWS_REGION",
+            "VPC_ID",
+            "CERTIFICATE_ID",
+            "ECR_REPOSITORY_URL",
+            "REPLACE_ME",
+        )
         return value == "" or "<" in value or "replace-me" in value or any(p in value for p in placeholders)
     return False
 
@@ -322,6 +343,8 @@ def validate(env_name):
         "exampleApp.valuesFile",
         "exampleApp.secretName",
         "exampleApp.secretManagerPath",
+        "exampleApp.image.repository",
+        "exampleApp.image.tag",
     ]
     for path in required:
         try:
@@ -330,6 +353,11 @@ def validate(env_name):
             value = None
         if value in (None, ""):
             errors.append(f"missing required value: {path}")
+
+    # ECR repositories are created with IMMUTABLE tags, so a moving tag cannot be
+    # re-pushed and ArgoCD could never tell one rollout from the next.
+    if env.get("exampleApp", {}).get("image", {}).get("tag") == "latest":
+        errors.append("exampleApp.image.tag must be an explicit version, not latest")
 
     env_words = set(registered_envs()) | {"dev", "staging", "production"}
     for other in sorted(env_words - {env_name}):

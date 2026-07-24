@@ -19,9 +19,16 @@ spec:
     syncOptions:
       - "CreateNamespace=true"
   source:
-    repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+    repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
     targetRevision: "main"
     path: "gitops/apps/example-app/chart"
     helm:
       valueFiles:
         - "values-staging.yaml"
+      parameters:
+        -
+          name: "image.repository"
+          value: "ECR_REPOSITORY_URL"
+        -
+          name: "image.tag"
+          value: "0.1.0"

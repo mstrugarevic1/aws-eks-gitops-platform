@@ -25,3 +25,15 @@ output "ecr_repository_url" {
 output "app_secret_arn" {
   value = aws_secretsmanager_secret.app.arn
 }
+
+output "app_secret_name" {
+  value = aws_secretsmanager_secret.app.name
+}
+
+output "ecr_repository_name" {
+  value = aws_ecr_repository.app.name
+}
+
+output "kubernetes_version" {
+  value = aws_eks_cluster.this.version
+}

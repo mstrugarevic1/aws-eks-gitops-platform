@@ -20,6 +20,7 @@ resource "aws_db_instance" "this" {
   identifier                  = var.name
   engine                      = "postgres"
   engine_version              = "16"
+  db_name                     = var.db_name
   instance_class              = var.instance_class
   allocated_storage           = var.allocated_storage
   db_subnet_group_name        = aws_db_subnet_group.this.name

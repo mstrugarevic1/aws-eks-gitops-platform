@@ -123,6 +123,10 @@
       "namespaceKey": "app",
       "createNamespace": true,
       "valueFilesFromEnv": ["exampleApp.valuesFile"],
+      "helmParametersFromEnv": [
+        { "name": "image.repository", "valueRef": "exampleApp.image.repository" },
+        { "name": "image.tag", "valueRef": "exampleApp.image.tag" }
+      ],
       "source": { "path": "gitops/apps/example-app/chart" }
     }
   ]

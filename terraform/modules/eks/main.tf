@@ -1,19 +1,25 @@
 resource "aws_ecr_repository" "app" {
-  name                 = var.name
+  name                 = var.ecr_repository_name
   image_tag_mutability = "IMMUTABLE"
-  force_delete         = true
+
+  # Demo environments set this to true so `terraform destroy` does not stop on a
+  # repository that still holds images. Leave it false for anything real.
+  force_delete = var.ecr_force_delete
 
   image_scanning_configuration {
     scan_on_push = true
   }
 }
 
+# Created empty. `make configure-app-secret ENV=<env>` fills it from the
+# RDS-managed master secret, so no credential ever reaches Terraform state.
 resource "aws_secretsmanager_secret" "app" {
-  name = "${var.name}/app"
+  name = var.app_secret_name
 
-  # Hard-delete on destroy so a recreate on the same account does not collide with
-  # a secret still sitting in the recovery window.
-  recovery_window_in_days = 0
+  # 0 hard-deletes on destroy, so recreating in the same account does not collide
+  # with a secret still sitting in the recovery window. Anything above 0 keeps a
+  # recovery window and blocks an immediate recreate under the same name.
+  recovery_window_in_days = var.app_secret_recovery_days
 }
 
 data "aws_iam_policy_document" "cluster_assume_role" {

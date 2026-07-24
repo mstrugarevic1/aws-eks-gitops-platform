@@ -1,0 +1,51 @@
+name: Build app image
+
+# Manual only. The image tag is an input because ECR repositories are created
+# with immutable tags: the same tag cannot be pushed twice.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment whose ECR repository receives the image"
+        required: true
+        default: dev
+      tag:
+        description: "Image tag, for example 0.1.1"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Only this job needs a token to assume the AWS role.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Role created by terraform/foundation. Its ARN is a repository variable,
+      # not a secret: it is not a credential on its own.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build and push
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          docker build --platform linux/amd64 -t "${REGISTRY}/${REPOSITORY}:${TAG}" app
+          docker push "${REGISTRY}/${REPOSITORY}:${TAG}"
+
+      - name: Next step
+        run: |
+          echo "Point the environment at the new image, then commit and push:"
+          echo "  make set-image-tag ENV=${{ inputs.environment }} TAG=${{ inputs.tag }}"

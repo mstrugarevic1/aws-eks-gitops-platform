@@ -1,18 +1,16 @@
-# Dev environment values consumed by the ArgoCD Application (deploy/argocd).
+# Dev environment values consumed by the ArgoCD Application.
 # Git is the source of truth: ArgoCD renders the chart with this file.
 #
-# image.tag is updated by CI after each image push (`make set-image-tag`).
+# image.repository and image.tag are NOT set here. They come from
+# gitops/environments/dev/environment.json (exampleApp.image), written by
+# `make configure-gitops-values ENV=dev` and `make set-image-tag ENV=dev TAG=...`.
+#
 # Dev baseline:
 # - no custom domain
 # - no ACM certificate
 # - public app URL is the AWS-generated ALB DNS name over HTTP
 #
 # Keep ingress.host and ingress.certificateArn empty for this mode.
-# For production, set both fields and also restrict allowedHosts/CORS.
-
-image:
-  repository: "public.ecr.aws/nginx/nginx"
-  tag: "latest"
 
 ingress:
   # Empty means the ALB accepts requests for its generated DNS name.
@@ -21,6 +19,5 @@ ingress:
   host: ""
 
 config:
-  # Wildcard is used only because the ALB DNS name is not known until runtime.
-  allowedHosts: "*"
-  corsAllowedOrigins: ""
+  appEnv: "dev"
+  logLevel: "DEBUG"

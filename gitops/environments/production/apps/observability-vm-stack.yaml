@@ -28,6 +28,6 @@ spec:
           - "$values/../../deploy/observability/victoria-metrics-k8s-stack-values.yaml"
           - "$values/gitops/environments/production/values/vm-stack-values.yaml"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-argocd-platform-boilerplate.git"
+      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"

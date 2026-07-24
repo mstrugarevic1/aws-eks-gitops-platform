@@ -20,21 +20,21 @@ variable "azs" {
 
 variable "public_subnet_cidrs" {
   type        = list(string)
-  description = "Public subnet CIDRs."
+  description = "Public subnet CIDRs. One per availability zone; enforced by a precondition on the subnet resource."
 
   validation {
-    condition     = length(var.public_subnet_cidrs) == length(var.azs)
-    error_message = "public_subnet_cidrs must contain one CIDR per availability zone."
+    condition     = length(var.public_subnet_cidrs) > 0
+    error_message = "At least one public subnet CIDR is required."
   }
 }
 
 variable "private_subnet_cidrs" {
   type        = list(string)
-  description = "Private subnet CIDRs."
+  description = "Private subnet CIDRs. One per availability zone; enforced by a precondition on the subnet resource."
 
   validation {
-    condition     = length(var.private_subnet_cidrs) == length(var.azs)
-    error_message = "private_subnet_cidrs must contain one CIDR per availability zone."
+    condition     = length(var.private_subnet_cidrs) > 0
+    error_message = "At least one private subnet CIDR is required."
   }
 }
 

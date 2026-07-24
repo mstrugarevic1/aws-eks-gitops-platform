@@ -3,9 +3,11 @@
 .vscode/
 *.swp
 
-# Terraform local/generated files
+# Terraform local/generated files.
+# Root module lock files (terraform/envs/*, terraform/foundation) are committed
+# so provider versions are reproducible; only module-local ones are ignored.
 **/.terraform/
-**/.terraform.lock.hcl
+terraform/modules/**/.terraform.lock.hcl
 **/terraform.tfvars
 **/*.tfstate
 **/*.tfstate.*

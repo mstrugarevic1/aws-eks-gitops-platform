@@ -1,255 +1,162 @@
-# eks-argocd-platform-boilerplate
+# eks-gitops-platform
 
-[![checks](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml/badge.svg?branch=main&event=push)](https://github.com/mstrugarevic1/eks-argocd-platform-boilerplate/actions/workflows/checks.yml)
+[![checks](https://github.com/mstrugarevic1/eks-gitops-platform/actions/workflows/checks.yml/badge.svg?branch=main&event=push)](https://github.com/mstrugarevic1/eks-gitops-platform/actions/workflows/checks.yml)
 
-This is a learning portfolio project and reusable multi-environment AWS EKS platform boilerplate using Terraform, ArgoCD App of Apps, Helm, and GitOps.
+Reusable AWS EKS platform built with Terraform, ArgoCD App of Apps, Helm and
+GitOps. Three environments — `dev`, `staging`, `production` — driven from one
+component registry.
 
-## Purpose
+This is a learning and portfolio project. It is small on purpose: the point is a
+deployment path another engineer can follow end to end, not a feature list.
 
-Use this repository as a starting point for an EKS platform where ownership is split clearly:
+## Architecture
 
-- Terraform creates and owns AWS infrastructure.
-- ArgoCD owns Kubernetes add-ons and workloads.
-- GitOps configuration supports `dev`, `staging`, and `production` from one component registry.
+```mermaid
+flowchart LR
+    engineer[Engineer] --> tf[Terraform]
+    engineer --> git[(Git repository)]
+
+    tf --> aws[AWS: VPC, EKS, RDS, ECR, Secrets Manager, IAM/IRSA]
+    tf -- outputs --> git
+
+    gha[GitHub Actions] -- push image --> ecr[ECR]
+    engineer --> gha
+
+    engineer -- helm install --> argocd[ArgoCD]
+    git -- pull manifests --> argocd
+    argocd --> addons[Add-ons and workloads]
+
+    addons --> eso[External Secrets Operator]
+    eso -- IRSA --> sm[Secrets Manager]
+    eso --> k8ssecret[Kubernetes Secret]
+    k8ssecret --> app[example-app]
+    ecr -- image --> app
+    app --> rds[(RDS PostgreSQL)]
+
+    addons --> grafana[Grafana]
+    grafana -- IRSA --> cw[CloudWatch]
+```
+
+More detail, including the sync waves and the IRSA roles, in
+[docs/architecture.md](docs/architecture.md).
+
+## Features
+
+- Three environments from one component registry; adding a fourth is a directory
+  copy and one line of JSON.
+- App of Apps: a single root Application per environment; children are generated,
+  committed and applied in sync-wave order.
+- Every chart version, provider version and tool version pinned.
+- Database credentials never touch Terraform state or Git: Terraform creates an
+  empty Secrets Manager entry, one command fills it, External Secrets reads it
+  through IRSA.
+- No AWS access key in the cluster. Every controller uses IRSA.
+- Static validation that needs no AWS account, and live verification that fails
+  loudly.
+- A minimal runnable example application, not a placeholder image.
 
 ## Ownership
 
-Terraform manages:
+| Terraform owns | ArgoCD owns |
+| -------------- | ----------- |
+| VPC, subnets, routes, NAT and internet gateways | AWS Load Balancer Controller |
+| EKS cluster and managed node groups | External Secrets Operator and its manifests |
+| ECR | metrics-server |
+| RDS and the empty Secrets Manager entry | Cluster Autoscaler |
+| IAM and IRSA roles | observability stack (VictoriaMetrics, Loki, Promtail, Grafana) |
+| CloudWatch alarms | the gp3 StorageClass |
+| AWS-managed EKS add-ons, including EBS CSI | workload charts, including `example-app` |
 
-- VPC, public/private subnets, routes, NAT gateways, and internet gateway
-- EKS cluster and managed node groups
-- ECR
-- RDS and the bootstrap AWS Secrets Manager secret
-- IAM and IRSA roles
-- CloudWatch alarms
-- AWS-managed EKS add-ons, including EBS CSI
+The handover is a set of Terraform outputs written into
+`gitops/environments/<env>/environment.json`, committed, and read by ArgoCD from
+Git.
 
-ArgoCD manages:
-
-- AWS Load Balancer Controller
-- External Secrets Operator and ExternalSecret manifests
-- metrics-server
-- Cluster Autoscaler
-- observability stack
-- workload Helm charts, including the optional `example-app`
-
-## Structure
+## Repository structure
 
 ```text
-bootstrap/                       # remote Terraform backend bootstrap
-terraform/modules/               # reusable AWS modules
-terraform/envs/dev/              # dev Terraform environment
-terraform/envs/staging/          # staging Terraform environment
-terraform/envs/production/       # production Terraform environment
-terraform/foundation/            # optional GitHub OIDC/ECR push role
-deploy/argocd/install/           # ArgoCD Helm values
-deploy/observability/            # shared observability values and dashboards
-deploy/storage/                  # shared storage manifests
-gitops/base/components.json      # App of Apps component registry
-gitops/apps/example-app/chart/   # optional example app chart
-gitops/environments/<env>/       # per-env GitOps config and rendered apps
-scripts/gitops.py                # local render/validation helper
+app/                             minimal example workload (Dockerfile + one Python file)
+bootstrap/                       remote Terraform backend bootstrap
+terraform/modules/               reusable AWS modules
+terraform/envs/<env>/            per-environment Terraform root module
+terraform/foundation/            optional GitHub OIDC role for pushing to ECR
+deploy/argocd/install/           ArgoCD Helm values
+deploy/observability/            shared observability values and dashboards
+deploy/storage/                  shared storage manifests
+gitops/base/components.json      component registry: what exists, which chart, which version
+gitops/environments/<env>/       per-environment config and rendered Applications
+gitops/apps/example-app/chart/   the example application chart
+scripts/                         render, secret, verify and cleanup helpers
+tests/                           unit tests for the renderer
+docs/                            guides
 ```
 
-## Prerequisites
-
-- AWS CLI authenticated to the target account
-- Terraform
-- kubectl
-- Helm
-- Python 3
-- An existing Git remote readable by ArgoCD
-
-## Configure An Environment
-
-Start with one environment. The same flow applies to `dev`, `staging`, and `production`.
+## Quick start
 
 ```bash
+make prerequisites
 cp terraform/envs/dev/terraform.tfvars.example terraform/envs/dev/terraform.tfvars
-```
+# edit terraform.tfvars: project, region, and your real eks_public_access_cidrs
 
-Set the project, region, network, and EKS API access CIDRs:
-
-```hcl
-project     = "my-platform"
-environment = "dev"
-aws_region  = "us-east-1"
-
-azs                  = ["us-east-1a", "us-east-1b"]
-vpc_cidr             = "10.10.0.0/16"
-public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
-private_subnet_cidrs = ["10.10.11.0/24", "10.10.12.0/24"]
-nat_gateway_strategy = "single"
-
-eks_public_access_cidrs = ["203.0.113.10/32"]
-```
-
-Use `nat_gateway_strategy = "single"` for lower-cost environments and `nat_gateway_strategy = "per_az"` when each private subnet should route through a NAT gateway in the same AZ.
-
-GitOps environment values live in:
-
-```text
-gitops/environments/dev/environment.json
-gitops/environments/staging/environment.json
-gitops/environments/production/environment.json
-```
-
-Before the cluster exists, these files contain placeholders such as `AWS_ACCOUNT_ID`, `VPC_ID`, and IRSA role ARNs. After Terraform creates the infrastructure, fill them with:
-
-```bash
-make configure-gitops-values ENV=dev
-```
-
-## Bootstrap And Deploy
-
-Create the Terraform backend:
-
-```bash
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
-```
-
-Initialize and review Terraform:
-
-```bash
-make init ENV=dev
-make validate ENV=dev
-make plan ENV=dev
-```
-
-Apply only after the plan is reviewed:
-
-```bash
-make apply ENV=dev
-```
-
-Install ArgoCD, render GitOps values from Terraform outputs, validate the rendered manifests, and register the root app:
-
-```bash
+make init ENV=dev && make plan ENV=dev && make apply ENV=dev
+make kubeconfig ENV=dev
+make configure-app-secret ENV=dev
+make build-app ENV=dev TAG=0.1.0 && make set-image-tag ENV=dev TAG=0.1.0
 make deploy-argocd ENV=dev
-make configure-gitops-values ENV=dev
-make gitops-validate ENV=dev
+make configure-gitops-values ENV=dev && make gitops-validate ENV=dev
+git add gitops/ && git commit -m "chore: configure dev" && git push
+make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 make apply-argocd-apps ENV=dev
+make verify ENV=dev
 ```
 
-`apply-argocd-apps` applies only the root Application:
+Expect 20-30 minutes, most of it EKS and RDS.
 
-```text
-gitops/environments/dev/root-app.yaml
-```
+**The `git push` is required.** ArgoCD reconciles the remote repository, not your
+working copy.
 
-ArgoCD then reconciles the child Applications from:
+## Full deployment guide
 
-```text
-gitops/environments/dev/apps/
-```
+Step by step, with what each command does and what it needs:
+[docs/deployment.md](docs/deployment.md).
 
-## Validate Without Deploying
-
-Run the safe local checks:
+## Verification
 
 ```bash
-make check
+make check          # static, no AWS account needed
+make verify ENV=dev # live, needs a running cluster
 ```
 
-This formats/checks Terraform files, parses JSON, renders all GitOps environments, and lints/renders the example Helm chart. It does not run `terraform init`, call AWS, apply Kubernetes manifests, or sync ArgoCD.
+What each covers, plus a raw `kubectl`/`argocd` smoke test:
+[docs/validation.md](docs/validation.md).
 
-After replacing GitOps placeholders, validate one environment:
-
-```bash
-make gitops-validate ENV=dev
-```
-
-## Add An Environment
-
-Create Terraform and GitOps environment directories:
+## Adding an environment
 
 ```bash
 cp -R terraform/envs/dev terraform/envs/sandbox
 cp -R gitops/environments/dev gitops/environments/sandbox
 ```
 
-Register the environment in one place:
+Register it in `gitops/environments/environments.json`, update the copied
+`clusterName`, `secretManagerPath`, `valuesFile` and `vpc_cidr`, add
+`gitops/apps/example-app/chart/values-sandbox.yaml`, then
+`make gitops-render ENV=sandbox`. Validation rejects an environment that still
+references another one. Details in [docs/deployment.md](docs/deployment.md).
 
-```json
-{
-  "environments": ["dev", "staging", "production", "sandbox"]
-}
-```
+## Adding an application
 
-Update:
+Put the chart in `gitops/apps/<name>/chart/`, register it in
+`gitops/base/components.json` with a sync wave and a pinned version, enable it per
+environment, and render. Field reference in [docs/gitops.md](docs/gitops.md).
 
-```text
-terraform/envs/sandbox/terraform.tfvars.example
-gitops/environments/sandbox/environment.json
-```
+## Enabling add-ons
 
-Render and validate:
-
-```bash
-make gitops-render ENV=sandbox
-make gitops-validate ENV=sandbox
-```
-
-## Add An Application
-
-Add a chart or manifest directory:
-
-```text
-gitops/apps/my-app/chart/
-```
-
-Register it in `gitops/base/components.json`:
-
-```json
-{
-  "name": "my-app",
-  "enabledKey": "apps.myApp",
-  "wave": 20,
-  "namespaceKey": "app",
-  "createNamespace": true,
-  "valueFilesFromEnv": ["myApp.valuesFile"],
-  "source": { "path": "gitops/apps/my-app/chart" }
-}
-```
-
-Enable it per environment:
-
-```json
-{
-  "apps": {
-    "exampleApp": true,
-    "myApp": true
-  },
-  "myApp": {
-    "valuesFile": "values-dev.yaml"
-  }
-}
-```
-
-Put environment-specific Helm values in the app chart directory:
-
-```yaml
-image:
-  repository: "AWS_ACCOUNT_ID.dkr.ecr.AWS_REGION.amazonaws.com/my-app-dev"
-  tag: "latest"
-
-ingress:
-  host: "my-app.dev.example.com"
-```
-
-Render the environment:
-
-```bash
-make gitops-render ENV=dev
-```
-
-## Enable Or Disable An Add-on
-
-Edit `gitops/environments/<env>/environment.json`:
+Edit `addons` in `gitops/environments/<env>/environment.json`:
 
 ```json
 {
   "addons": {
+    "storageclass": true,
     "metricsServer": true,
     "awsLoadBalancerController": true,
     "clusterAutoscaler": true,
@@ -259,50 +166,99 @@ Edit `gitops/environments/<env>/environment.json`:
 }
 ```
 
-Render and validate after the change:
-
-```bash
-make gitops-render ENV=dev
-make gitops-validate ENV=dev
-```
+Then `make gitops-render ENV=dev`, validate, commit and push.
 
 ## Secrets
 
-Do not commit plaintext secrets, `.env` files, kubeconfigs, private keys, or real `terraform.tfvars` files.
-
-The intended runtime path is:
-
-- Terraform creates the AWS Secrets Manager secret and IRSA roles.
-- External Secrets Operator reads from AWS Secrets Manager through IRSA.
-- ArgoCD applies `ExternalSecret` manifests.
-- Kubernetes workloads consume generated Kubernetes Secrets.
-
-Use placeholders in examples and documentation.
-
-## Destroy Safely
-
-Remove ArgoCD-managed resources first so controller-created cloud resources, such as ALBs, are deleted before Terraform destroys the VPC:
-
-```bash
-kubectl -n argocd delete application dev-root
+```text
+Terraform creates an empty secret at <project>/<environment>/example-app
+  -> make configure-app-secret fills it from the RDS-managed master secret
+  -> External Secrets Operator reads it through IRSA
+  -> a Kubernetes Secret appears in the application namespace
+  -> the pod consumes it with envFrom
 ```
 
-Wait until controller-created AWS resources are gone, then destroy Terraform-managed infrastructure:
+No database password reaches Terraform state or Git. Keys created, rotation and
+the full flow: [docs/secrets.md](docs/secrets.md).
+
+## CI and validation
+
+`make check` runs the local subset: Terraform formatting, JSON parsing, GitOps
+rendering and its determinism check, unit tests, shellcheck, Helm lint and
+template.
+
+CI adds `terraform init/validate/tflint` per environment, Checkov, `shfmt`,
+`ruff`, `kubeconform` against the rendered manifests including CRDs, `actionlint`,
+markdownlint, local documentation link checking and Gitleaks. It needs no AWS
+credentials and runs with read-only permissions.
+Details: [docs/validation.md](docs/validation.md).
+
+## Cleanup
 
 ```bash
-make destroy ENV=dev
+make destroy-gitops ENV=dev   # first: lets the controllers delete their ALBs
+make destroy ENV=dev          # then: Terraform
 ```
 
-Delete the Terraform backend only after infrastructure is destroyed and state is no longer needed:
+The backend bucket is never deleted automatically. Order, destructive defaults
+and what to do when destroy fails: [docs/cleanup.md](docs/cleanup.md).
 
-```bash
-./bootstrap/destroy-bootstrap.sh my-platform dev us-east-1 DELETE_TERRAFORM_BACKEND
-```
+## Troubleshooting
+
+Symptom, cause, verification command, fix, for the failures that actually happen:
+[docs/troubleshooting.md](docs/troubleshooting.md).
+
+## Security considerations
+
+- Nothing in the cluster holds an AWS access key; controllers use IRSA, each role
+  scoped to what it needs. The External Secrets role can read one secret ARN.
+- The EKS API endpoint is public and restricted only by
+  `eks_public_access_cidrs`. Set it to a real address, or turn the public
+  endpoint off and reach the API over a VPN.
+- ArgoCD is installed with its built-in admin user, no ingress and no SSO. Add
+  SSO and RBAC before more than one person uses it.
+- Nodes and RDS run in private subnets; only the ALB is internet-facing.
+- The example application runs non-root as UID 10001, with a read-only root
+  filesystem, all capabilities dropped and `RuntimeDefault` seccomp.
+- Gitleaks runs on every pull request. Credentials, kubeconfigs and
+  `terraform.tfvars` are gitignored.
+
+Reporting and known weak defaults: [SECURITY.md](SECURITY.md).
+
+## Cost considerations
+
+Largest recurring charges first: NAT gateways (hourly per gateway,
+`nat_gateway_strategy = "per_az"` multiplies this by the AZ count), RDS (doubled
+by `rds_multi_az`), the EKS control plane, ALBs, and the EC2 nodes held by
+`node_min_size`.
+
+For a demo environment: `nat_gateway_strategy = "single"`, `rds_multi_az = false`,
+`db.t4g.micro`, `node_min_size = 1`, and tear it down the same day. An
+environment left running overnight costs real money.
 
 ## Limitations
 
-- ArgoCD repository credentials are intentionally not managed here.
-- Production keeps `automated.prune` disabled by default.
-- The example app demonstrates the GitOps workflow; replace it with a real workload.
-- `make check` is static validation only. It does not prove that AWS quotas, IAM permissions, chart versions, or live cluster reconciliation are correct.
-- Review cost and availability choices before production use, especially NAT gateway count, node sizing, RDS sizing, retention, and public EKS API access.
+- Not deployed and verified against a live AWS account as part of this
+  repository's checks. CI is static only.
+- `make check` proves the configuration is internally consistent. It does not
+  prove that AWS quotas, IAM permissions or live reconciliation are correct.
+- ArgoCD is installed with Helm, not GitOps, and is not self-managed.
+- ArgoCD repository credentials are created by a command, not committed.
+- `production` keeps `automated.prune` disabled, so removing a component there
+  leaves its resources behind on purpose.
+- The example application exists to exercise the platform. Replace it with a real
+  workload.
+- Observability retention, dashboards and alerting rules are minimal.
+
+## Roadmap
+
+- Self-managed ArgoCD, so its own configuration is reconciled from Git.
+- ArgoCD ingress with TLS, SSO and RBAC.
+- Private EKS API endpoint with VPN access as the documented default.
+- Terraform plan on pull requests through the existing OIDC role.
+- Alerting rules and notification routing for the observability stack.
+- Karpenter as an alternative to Cluster Autoscaler.
+
+## License
+
+[MIT](LICENSE). Contributing guidelines: [CONTRIBUTING.md](CONTRIBUTING.md).

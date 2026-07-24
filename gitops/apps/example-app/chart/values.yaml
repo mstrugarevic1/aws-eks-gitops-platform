@@ -1,8 +1,11 @@
 replicaCount: 2
 
+# ArgoCD overrides repository and tag with Helm parameters taken from
+# gitops/environments/<env>/environment.json (exampleApp.image). These defaults
+# only exist so `helm lint` and `helm template` work without an environment.
 image:
-  repository: "public.ecr.aws/nginx/nginx"
-  tag: "latest"
+  repository: "example-app"
+  tag: "0.1.0"
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -10,13 +13,16 @@ serviceAccount:
   annotations: {}
   automountServiceAccountToken: false
 
+# Consumed by app/main.py. PORT is not listed here: it is rendered from
+# service.targetPort so the container port and the app agree by construction.
 config:
-  debug: "False"
-  allowedHosts: ""
-  corsAllowedOrigins: ""
+  appEnv: "dev"
+  logLevel: "INFO"
 
+# Must match exampleApp.secretName in environment.json: that is the Kubernetes
+# Secret the ExternalSecret creates.
 secret:
-  name: example-app-app
+  name: example-app
 
 service:
   port: 80

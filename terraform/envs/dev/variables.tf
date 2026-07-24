@@ -1,7 +1,7 @@
 variable "project" {
   type        = string
-  description = "Short project slug used for AWS resource names."
-  default     = "platform"
+  description = "Short project slug used for AWS resource names. Must match PROJECT in the Makefile."
+  default     = "my-platform"
 }
 
 variable "environment" {
@@ -64,8 +64,12 @@ variable "eks_endpoint_public_access" {
 
 variable "eks_public_access_cidrs" {
   type        = list(string)
-  description = "CIDRs allowed to reach the public EKS API endpoint. Set to your public IP, e.g. [\"A.B.C.D/32\"]."
-  default     = ["A.B.C.D/32"]
+  description = "CIDRs allowed to reach the public EKS API endpoint. Required: set it to your operator or VPN address, e.g. [\"203.0.113.10/32\"]. There is deliberately no default, so an unreviewed apply cannot open the API to the internet."
+
+  validation {
+    condition     = length(var.eks_public_access_cidrs) > 0 && alltrue([for c in var.eks_public_access_cidrs : can(cidrnetmask(c))])
+    error_message = "eks_public_access_cidrs must contain at least one valid CIDR block."
+  }
 }
 
 variable "rds_instance_class" {
@@ -90,17 +94,17 @@ variable "rds_username" {
 
 variable "rds_multi_az" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "rds_deletion_protection" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "rds_skip_final_snapshot" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "alarm_email" {
@@ -113,4 +117,40 @@ variable "tags" {
   type        = map(string)
   description = "Additional AWS tags."
   default     = {}
+}
+
+variable "kubernetes_version" {
+  type        = string
+  description = "EKS Kubernetes control plane version. Keep the cluster-autoscaler image tag in gitops/base/components.json aligned with this."
+  default     = "1.35"
+}
+
+variable "node_instance_types" {
+  type        = list(string)
+  description = "Managed node group instance types."
+  default     = ["t3.medium"]
+}
+
+variable "rds_db_name" {
+  type        = string
+  description = "Initial PostgreSQL database created on the instance."
+  default     = "app"
+}
+
+variable "ecr_force_delete" {
+  type        = bool
+  description = "Delete the ECR repository on destroy even if it still holds images. Convenient for demo environments, unsafe for production."
+  default     = true
+}
+
+variable "app_secret_recovery_days" {
+  type        = number
+  description = "Secrets Manager recovery window for the application secret. 0 deletes immediately (demo, allows instant recreate); 7-30 keeps a recovery window."
+  default     = 0
+}
+
+variable "alb_controller_version" {
+  type        = string
+  description = "AWS Load Balancer Controller release used to fetch the official IAM policy. Must match the chart version in gitops/base/components.json."
+  default     = "v3.4.2"
 }
