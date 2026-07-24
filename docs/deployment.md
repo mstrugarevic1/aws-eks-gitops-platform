@@ -29,10 +29,26 @@ deployment_role_arn = (
   "arn:aws:iam::111111111111:role/platform-terraform-deploy"
 )
 
-eks_public_access_cidrs = ["203.0.113.10/32"]
+database_subnet_cidrs = [
+  "10.10.21.0/24",
+  "10.10.22.0/24",
+]
+
+eks_endpoint_public_access = false
+eks_public_access_cidrs    = []
+
+client_vpn = {
+  enabled                    = true
+  client_cidr_block          = "10.255.0.0/22"
+  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
+  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
+  split_tunnel               = true
+  dns_servers                = []
+}
 ```
 
-The deployment role must already exist in the target AWS account.
+The deployment role and ACM certificates must already exist in the target AWS
+account.
 
 ## 3. Bootstrap Terraform State
 
@@ -58,11 +74,26 @@ ECR, IAM and CloudWatch resources that match the stack configuration.
 ## 5. Configure kubectl
 
 ```bash
+# Export the VPN profile after Terraform creates the Client VPN endpoint.
+aws ec2 export-client-vpn-client-configuration \
+  --client-vpn-endpoint-id "$(cd terraform/stack && terraform output -raw client_vpn_endpoint_id)" \
+  --output text > client-vpn-dev.ovpn
+
+# Import client-vpn-dev.ovpn into AWS VPN Client, then connect the VPN.
+
+# Write kubeconfig for the private EKS endpoint.
 make kubeconfig ENV=dev
+
+# Confirm access through the VPN.
 kubectl get nodes
 ```
 
 The Makefile reads cluster name and region from Terraform outputs.
+Connect the AWS Client VPN before running `kubectl` because the EKS endpoint is
+private.
+
+The exported VPN profile does not include a client private key. Keep client
+certificates and private keys outside this repository.
 
 ## 6. Fill The Application Secret
 

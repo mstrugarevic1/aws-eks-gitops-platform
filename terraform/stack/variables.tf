@@ -44,6 +44,11 @@ variable "private_subnet_cidrs" {
   type = list(string)
 }
 
+variable "database_subnet_cidrs" {
+  type        = list(string)
+  description = "Isolated database subnet CIDRs. One per availability zone."
+}
+
 variable "nat_gateway_strategy" {
   type        = string
   description = "Use single for cost-sensitive environments or per_az for higher availability."
@@ -67,11 +72,41 @@ variable "eks_endpoint_public_access" {
 
 variable "eks_public_access_cidrs" {
   type        = list(string)
-  description = "CIDRs allowed to reach the public EKS API endpoint. Required: set it to your operator or VPN address, e.g. [\"203.0.113.10/32\"]. There is deliberately no default, so an unreviewed apply cannot open the API to the internet."
+  description = "CIDRs allowed to reach the public EKS API endpoint when public access is enabled."
 
   validation {
-    condition     = length(var.eks_public_access_cidrs) > 0 && alltrue([for c in var.eks_public_access_cidrs : can(cidrnetmask(c))])
-    error_message = "eks_public_access_cidrs must contain at least one valid CIDR block."
+    condition     = alltrue([for c in var.eks_public_access_cidrs : can(cidrnetmask(c))])
+    error_message = "eks_public_access_cidrs must contain only valid CIDR blocks."
+  }
+}
+
+variable "client_vpn" {
+  type = object({
+    enabled                    = bool
+    client_cidr_block          = string
+    server_certificate_arn     = string
+    root_certificate_chain_arn = string
+    split_tunnel               = bool
+    dns_servers                = list(string)
+  })
+  description = "Optional AWS Client VPN endpoint. Certificate ARNs must already exist in ACM."
+  default = {
+    enabled                    = false
+    client_cidr_block          = "10.255.0.0/22"
+    server_certificate_arn     = ""
+    root_certificate_chain_arn = ""
+    split_tunnel               = true
+    dns_servers                = []
+  }
+
+  validation {
+    condition     = !var.client_vpn.enabled || can(cidrnetmask(var.client_vpn.client_cidr_block))
+    error_message = "client_vpn.client_cidr_block must be a valid CIDR when Client VPN is enabled."
+  }
+
+  validation {
+    condition     = !var.client_vpn.enabled || (var.client_vpn.server_certificate_arn != "" && var.client_vpn.root_certificate_chain_arn != "")
+    error_message = "client_vpn certificate ARNs are required when Client VPN is enabled."
   }
 }
 

@@ -53,22 +53,52 @@ private_subnet_cidrs = [
   "10.10.11.0/24",
   "10.10.12.0/24",
 ]
+
+database_subnet_cidrs = [
+  "10.10.21.0/24",
+  "10.10.22.0/24",
+]
 ```
 
 `nat_gateway_strategy = "single"` is the lower-cost dev path. Use `per_az` when
 you want one NAT gateway per Availability Zone.
 
+Public subnets are for internet-facing load balancers and NAT gateways. Private
+subnets are for EKS and Client VPN associations. Database subnets are isolated:
+they have no default route and are used by the RDS subnet group.
+
 ## EKS
 
-The EKS API is public by default and restricted by CIDR:
+The EKS API is private by default in the examples:
 
 ```hcl
-eks_endpoint_public_access = true
-eks_public_access_cidrs    = ["203.0.113.10/32"]
+eks_endpoint_public_access = false
+eks_public_access_cidrs    = []
 ```
 
-Replace the documentation CIDR with your operator or VPN address. The example
-CIDR does not match a real client address.
+Operators reach the private endpoint through AWS Client VPN. If you temporarily
+enable public access, keep `eks_public_access_cidrs` restricted to a real
+operator or VPN egress CIDR.
+
+## Client VPN
+
+Client VPN is certificate-authenticated. Terraform references ACM certificate
+ARNs; it does not create or store private keys:
+
+```hcl
+client_vpn = {
+  enabled                    = true
+  client_cidr_block          = "10.255.0.0/22"
+  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
+  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
+  split_tunnel               = true
+  dns_servers                = []
+}
+```
+
+The VPN security group is allowed to reach the private EKS API and RDS. Public
+application traffic should enter through Kubernetes Ingress and the AWS Load
+Balancer Controller.
 
 Node group sizing is also explicit:
 

@@ -17,7 +17,9 @@ catalog, or a complete production operating model.
 For each environment, Terraform creates:
 
 - a VPC with public and private subnets;
+- isolated database subnets;
 - an EKS cluster with a managed node group;
+- AWS Client VPN for private operator access;
 - an ECR repository for the example application;
 - one PostgreSQL RDS instance;
 - Secrets Manager entries used by the example application;
@@ -94,7 +96,8 @@ You also need:
 
 - an AWS account for the Terraform backend bootstrap;
 - a deployment role in the target account that Terraform can assume;
-- an EKS API CIDR allow list for your operator or VPN address;
+- ACM certificates for AWS Client VPN server and client certificate auth;
+- AWS VPN Client, or another OpenVPN-compatible client;
 - a Git remote that ArgoCD can read.
 
 The deployment role is not created by the EKS stack. Create it before running
@@ -123,7 +126,22 @@ deployment_role_arn = (
   "arn:aws:iam::111111111111:role/platform-terraform-deploy"
 )
 
-eks_public_access_cidrs = ["203.0.113.10/32"]
+database_subnet_cidrs = [
+  "10.10.21.0/24",
+  "10.10.22.0/24",
+]
+
+eks_endpoint_public_access = false
+eks_public_access_cidrs    = []
+
+client_vpn = {
+  enabled                    = true
+  client_cidr_block          = "10.255.0.0/22"
+  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
+  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
+  split_tunnel               = true
+  dns_servers                = []
+}
 ```
 
 Then run:
