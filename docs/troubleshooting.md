@@ -41,6 +41,43 @@ aws s3api head-bucket --bucket my-platform-dev-tfstate-<account-id>
 **Fix.** Confirm the account, or change `project` in `terraform.tfvars` and in
 the `make bootstrap` invocation.
 
+### Deployment role cannot be assumed
+
+**Symptom.** `make plan` fails with `Cannot assume IAM Role`.
+
+**Cause.** `deployment_role_arn` does not exist in the target account, or the
+current AWS identity is not trusted to assume it.
+
+**Verify.**
+
+```bash
+aws sts get-caller-identity
+aws sts assume-role \
+  --role-arn arn:aws:iam::<account-id>:role/platform-terraform-deploy \
+  --role-session-name terraform-check \
+  --query AssumedRoleUser.Arn \
+  --output text
+```
+
+**Fix.** Create or update the deployment role in the target account before
+running Terraform. The EKS stack assumes that role; it does not create it.
+
+### Terraform reached the wrong AWS account
+
+**Symptom.** `make plan` fails with
+`Terraform authenticated against an unexpected AWS account.`
+
+**Cause.** The assumed role resolved to an account other than `aws_account_id`.
+
+**Verify.**
+
+```bash
+aws sts get-caller-identity --query Account --output text
+```
+
+**Fix.** Correct `aws_account_id`, `deployment_role_arn`, or the AWS credentials
+used before running `make plan`.
+
 ### Cannot reach the EKS API
 
 **Symptom.** `kubectl` times out, or `Unauthorized` right after `make apply`.

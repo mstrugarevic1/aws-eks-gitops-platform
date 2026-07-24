@@ -77,7 +77,8 @@ Git.
 app/                             minimal example workload (Dockerfile + one Python file)
 bootstrap/                       remote Terraform backend bootstrap
 terraform/modules/               reusable AWS modules
-terraform/envs/<env>/            per-environment Terraform root module
+terraform/stack/                 shared Terraform root module
+terraform/environments/          per-environment tfvars examples
 terraform/foundation/            optional GitHub OIDC role for pushing to ECR
 deploy/argocd/install/           ArgoCD Helm values
 deploy/observability/            shared observability values and dashboards
@@ -94,8 +95,8 @@ docs/                            guides
 
 ```bash
 make prerequisites
-cp terraform/envs/dev/terraform.tfvars.example terraform/envs/dev/terraform.tfvars
-# edit terraform.tfvars: project, region, and your real eks_public_access_cidrs
+cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
+# edit dev.tfvars: project, region, and your real eks_public_access_cidrs
 
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
 make init ENV=dev && make plan ENV=dev && make apply ENV=dev
@@ -133,7 +134,7 @@ What each covers, plus a raw `kubectl`/`argocd` smoke test:
 ## Adding an environment
 
 ```bash
-cp -R terraform/envs/dev terraform/envs/sandbox
+cp terraform/environments/dev.tfvars.example terraform/environments/sandbox.tfvars.example
 cp -R gitops/environments/dev gitops/environments/sandbox
 ```
 

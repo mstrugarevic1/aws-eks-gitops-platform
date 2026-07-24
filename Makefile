@@ -6,8 +6,9 @@ AWS_REGION ?= us-east-1
 # Every other chart version lives in gitops/base/components.json.
 ARGOCD_CHART_VERSION ?= 10.1.4
 
-TF_DIR := terraform/envs/$(ENV)
-BACKEND_CONFIG := ../../../bootstrap/backend-$(ENV).hcl
+TF_DIR := terraform/stack
+TF_VARS := ../environments/$(ENV).tfvars
+BACKEND_CONFIG := ../../bootstrap/backend-$(ENV).hcl
 GITOPS_ENV_DIR := gitops/environments/$(ENV)
 
 .PHONY: prerequisites bootstrap init fmt fmt-check validate plan apply destroy destroy-gitops clean check kubeconfig configure-app-secret configure-gitops-values set-image-tag build-app gitops-render gitops-validate deploy-argocd configure-argocd-repository apply-argocd-apps verify render-observability
@@ -45,13 +46,13 @@ validate:
 	cd $(TF_DIR) && terraform validate
 
 plan:
-	cd $(TF_DIR) && terraform plan
+	cd $(TF_DIR) && terraform plan -var-file=$(TF_VARS)
 
 apply:
-	cd $(TF_DIR) && terraform apply
+	cd $(TF_DIR) && terraform apply -var-file=$(TF_VARS)
 
 destroy:
-	cd $(TF_DIR) && terraform destroy
+	cd $(TF_DIR) && terraform destroy -var-file=$(TF_VARS)
 
 # .terraform.lock.hcl is committed for the root modules, so it is not deleted
 # here. Only provider caches and generated directories are removed.

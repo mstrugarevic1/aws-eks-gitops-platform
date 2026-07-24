@@ -1,10 +1,16 @@
-# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+# Copy to staging.tfvars and edit. *.tfvars files are gitignored.
 
 project     = "my-platform"
 environment = "staging"
 
 aws_region = "us-east-1"
 azs        = ["us-east-1a", "us-east-1b"]
+
+aws_account_id = "222222222222"
+
+deployment_role_arn = (
+  "arn:aws:iam::222222222222:role/platform-terraform-deploy"
+)
 
 vpc_cidr             = "10.20.0.0/16"
 public_subnet_cidrs  = ["10.20.1.0/24", "10.20.2.0/24"]
@@ -13,6 +19,7 @@ nat_gateway_strategy = "single"
 
 # Required, no default. Replace with the operator or VPN CIDR allowed to reach
 # the EKS API. 203.0.113.0/24 is the RFC 5737 documentation range.
+eks_endpoint_public_access = true
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
 kubernetes_version  = "1.35"
@@ -24,6 +31,7 @@ node_max_size       = 4
 rds_instance_class        = "db.t4g.micro"
 rds_allocated_storage     = 20
 rds_backup_retention_days = 7
+rds_username              = "app"
 rds_db_name               = "app"
 rds_multi_az              = true
 rds_deletion_protection   = true
@@ -31,5 +39,7 @@ rds_skip_final_snapshot   = false
 
 ecr_force_delete         = false
 app_secret_recovery_days = 30
+
+alb_controller_version = "v3.4.2"
 
 alarm_email = ""

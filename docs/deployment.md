@@ -20,15 +20,21 @@ Also needed: a Git remote that ArgoCD can read. See [gitops.md](gitops.md).
 ## 1. Configure the environment
 
 ```bash
-cp terraform/envs/dev/terraform.tfvars.example terraform/envs/dev/terraform.tfvars
+cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
 ```
 
-`terraform.tfvars` is gitignored. At minimum set:
+`terraform/environments/dev.tfvars` is gitignored. At minimum set:
 
 ```hcl
 project     = "my-platform"
 environment = "dev"
 aws_region  = "us-east-1"
+
+aws_account_id = "111111111111"
+
+deployment_role_arn = (
+  "arn:aws:iam::111111111111:role/platform-terraform-deploy"
+)
 
 # Replace with the address that will reach the EKS API. 203.0.113.0/24 is the
 # RFC 5737 documentation range and matches nothing real.
@@ -37,6 +43,7 @@ eks_public_access_cidrs = ["203.0.113.10/32"]
 
 `project` must match `PROJECT` in the Makefile. AWS resource names, the ECR
 repository and the Secrets Manager path are all derived from it.
+The deployment role must already exist in the target account before `make plan`.
 
 ## 2. Create the Terraform backend
 
@@ -182,7 +189,7 @@ make verify ENV=dev
 ## Adding an environment
 
 ```bash
-cp -R terraform/envs/dev terraform/envs/sandbox
+cp terraform/environments/dev.tfvars.example terraform/environments/sandbox.tfvars.example
 cp -R gitops/environments/dev gitops/environments/sandbox
 ```
 
@@ -192,7 +199,7 @@ Register it in `gitops/environments/environments.json`:
 { "environments": ["dev", "staging", "production", "sandbox"] }
 ```
 
-Then update `terraform/envs/sandbox/terraform.tfvars.example` (a non-overlapping
+Then update `terraform/environments/sandbox.tfvars.example` (a non-overlapping
 `vpc_cidr`) and `gitops/environments/sandbox/environment.json` (`name`,
 `aws.clusterName`, `exampleApp.secretManagerPath`, `exampleApp.valuesFile`), add
 `gitops/apps/example-app/chart/values-sandbox.yaml`, and render:

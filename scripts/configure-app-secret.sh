@@ -16,10 +16,16 @@ if [ "$#" -ne 1 ]; then
 fi
 
 env="$1"
-tf_dir="terraform/envs/${env}"
+tf_dir="terraform/stack"
+tf_vars="terraform/environments/${env}.tfvars"
 
 if [ ! -d "$tf_dir" ]; then
-  echo "No such environment: ${tf_dir}" >&2
+  echo "No such Terraform stack: ${tf_dir}" >&2
+  exit 1
+fi
+
+if [ ! -f "$tf_vars" ]; then
+  echo "No such environment variables file: ${tf_vars}" >&2
   exit 1
 fi
 
