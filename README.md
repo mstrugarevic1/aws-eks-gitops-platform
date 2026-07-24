@@ -65,6 +65,17 @@ then ArgoCD reconciles them from the remote repository.
 `-- tests/                  # GitOps renderer tests
 ```
 
+## Documentation
+
+Use the README for the short path through the repository. The detailed docs are
+kept in one place:
+
+- [Configuration](docs/configuration.md): environment tfvars, account roles,
+  networking, EKS, database and GitOps values.
+- [Deployment](docs/deployment.md): the full dev deployment and destroy flow.
+- [Troubleshooting](docs/troubleshooting.md): common AWS, Terraform, ArgoCD and
+  Kubernetes failures.
+
 ## Prerequisites
 
 Install the tools checked by:
@@ -139,8 +150,6 @@ applying the root Application:
 make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 ```
 
-The full deployment path is in [docs/deployment.md](docs/deployment.md).
-
 ## Optional Services
 
 Observability can be enabled or disabled per environment in
@@ -199,7 +208,3 @@ The project does not provide:
 - backup restore runbooks;
 - production incident response procedures;
 - cost controls beyond the documented small dev defaults.
-
-Configuration details are in [docs/configuration.md](docs/configuration.md).
-Operational steps are in [docs/deployment.md](docs/deployment.md). Common
-failures are in [docs/troubleshooting.md](docs/troubleshooting.md).

@@ -1,4 +1,4 @@
-# Configuration
+# EKS GitOps Platform: Configuration
 
 Environment-specific values live in `terraform/environments/*.tfvars`.
 The shared Terraform root is `terraform/stack`.

@@ -1,4 +1,4 @@
-# Troubleshooting
+# EKS GitOps Platform: Troubleshooting
 
 ## Wrong AWS Account
 

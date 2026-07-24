@@ -1,4 +1,4 @@
-# Deployment
+# EKS GitOps Platform: Deployment
 
 This is the complete path for one environment. The examples use `dev`.
 
