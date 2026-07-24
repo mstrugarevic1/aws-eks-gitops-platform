@@ -49,17 +49,20 @@ then ArgoCD reconciles them from the remote repository.
 ## Repository Structure
 
 ```text
-app/                     example Python web app and Dockerfile
-bootstrap/               remote Terraform backend bootstrap scripts
-deploy/argocd/           ArgoCD Helm install values
-gitops/                  ArgoCD environment config and rendered Applications
-terraform/environments/  per-environment tfvars examples
-terraform/foundation/    optional GitHub OIDC role for ECR pushes
-terraform/modules/       network, EKS, RDS and observability modules
-terraform/stack/         shared Terraform root module
-scripts/                 deployment, GitOps and verification helpers
-tests/                   GitOps renderer tests
-docs/                    detailed setup, configuration and troubleshooting
+.
+|-- app/                    # example Python web app and Dockerfile
+|-- bootstrap/              # remote Terraform backend bootstrap scripts
+|-- deploy/
+|   `-- argocd/             # ArgoCD Helm install values
+|-- docs/                   # configuration, deployment and troubleshooting
+|-- gitops/                 # ArgoCD environment config and rendered apps
+|-- scripts/                # deployment, GitOps and verification helpers
+|-- terraform/
+|   |-- environments/       # per-environment tfvars examples
+|   |-- foundation/         # optional GitHub OIDC role for ECR pushes
+|   |-- modules/            # network, EKS, RDS and observability modules
+|   `-- stack/              # shared Terraform root module
+`-- tests/                  # GitOps renderer tests
 ```
 
 ## Prerequisites
