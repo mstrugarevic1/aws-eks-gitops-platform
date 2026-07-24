@@ -12,6 +12,21 @@ variable "aws_region" {
   type = string
 }
 
+variable "aws_account_id" {
+  description = "Expected AWS account ID for this environment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.aws_account_id))
+    error_message = "aws_account_id must be a 12-digit AWS account ID."
+  }
+}
+
+variable "deployment_role_arn" {
+  description = "IAM role Terraform assumes in the target AWS account."
+  type        = string
+}
+
 variable "azs" {
   type        = list(string)
   description = "Availability zones for this environment."

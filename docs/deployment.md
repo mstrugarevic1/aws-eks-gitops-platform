@@ -30,6 +30,12 @@ project     = "my-platform"
 environment = "dev"
 aws_region  = "us-east-1"
 
+aws_account_id = "111111111111"
+
+deployment_role_arn = (
+  "arn:aws:iam::111111111111:role/platform-terraform-deploy"
+)
+
 # Replace with the address that will reach the EKS API. 203.0.113.0/24 is the
 # RFC 5737 documentation range and matches nothing real.
 eks_public_access_cidrs = ["203.0.113.10/32"]
@@ -37,6 +43,7 @@ eks_public_access_cidrs = ["203.0.113.10/32"]
 
 `project` must match `PROJECT` in the Makefile. AWS resource names, the ECR
 repository and the Secrets Manager path are all derived from it.
+The deployment role must already exist in the target account before `make plan`.
 
 ## 2. Create the Terraform backend
 
