@@ -8,9 +8,7 @@ updates:
 
   - package-ecosystem: terraform
     directories:
-      - /terraform/envs/dev
-      - /terraform/envs/staging
-      - /terraform/envs/production
+      - /terraform/stack
       - /terraform/foundation
     schedule:
       interval: monthly

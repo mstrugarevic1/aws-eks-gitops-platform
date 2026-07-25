@@ -1,6 +1,9 @@
 # Production values. image.repository/image.tag come from
 # gitops/environments/production/environment.json (exampleApp.image).
 
+workload:
+  mode: stateless
+
 ingress:
   certificateArn: ""
   host: "example-app.example.com"

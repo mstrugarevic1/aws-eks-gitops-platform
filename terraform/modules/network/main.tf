@@ -59,6 +59,22 @@ resource "aws_subnet" "private" {
   )
 }
 
+resource "aws_subnet" "database" {
+  count             = length(var.database_subnet_cidrs)
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = var.database_subnet_cidrs[count.index]
+  availability_zone = var.azs[count.index]
+
+  lifecycle {
+    precondition {
+      condition     = length(var.database_subnet_cidrs) == length(var.azs)
+      error_message = "database_subnet_cidrs must contain one CIDR per availability zone."
+    }
+  }
+
+  tags = { Name = "${var.name}-database-${count.index + 1}" }
+}
+
 locals {
   nat_gateway_count = var.nat_gateway_strategy == "per_az" ? length(var.azs) : 1
 }
@@ -103,6 +119,13 @@ resource "aws_route_table" "private" {
   tags = { Name = "${var.name}-private-rt-${count.index + 1}" }
 }
 
+resource "aws_route_table" "database" {
+  count  = length(aws_subnet.database)
+  vpc_id = aws_vpc.this.id
+
+  tags = { Name = "${var.name}-database-rt-${count.index + 1}" }
+}
+
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
@@ -113,4 +136,10 @@ resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
+}
+
+resource "aws_route_table_association" "database" {
+  count          = length(aws_subnet.database)
+  subnet_id      = aws_subnet.database[count.index].id
+  route_table_id = aws_route_table.database[count.index].id
 }

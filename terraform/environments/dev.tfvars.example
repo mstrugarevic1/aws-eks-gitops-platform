@@ -1,4 +1,4 @@
-# Copy to terraform.tfvars and edit. terraform.tfvars is gitignored.
+# Copy to dev.tfvars and edit. *.tfvars files are gitignored.
 #
 # project must match PROJECT in the Makefile: AWS resource names, the ECR
 # repository and the Secrets Manager path are all derived from
@@ -10,18 +10,36 @@ environment = "dev"
 aws_region = "us-east-1"
 azs        = ["us-east-1a", "us-east-1b"]
 
+aws_account_id = "111111111111"
+
+deployment_role_arn = (
+  "arn:aws:iam::111111111111:role/platform-terraform-deploy"
+)
+
 vpc_cidr             = "10.10.0.0/16"
 public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
 private_subnet_cidrs = ["10.10.11.0/24", "10.10.12.0/24"]
+database_subnet_cidrs = [
+  "10.10.21.0/24",
+  "10.10.22.0/24",
+]
 
 # single = one NAT gateway for the whole VPC (cheaper, single AZ failure domain)
 # per_az = one NAT gateway per AZ (higher availability, one hourly charge each)
 nat_gateway_strategy = "single"
 
-# Required, no default. Replace 203.0.113.10/32 with the operator or VPN address
-# allowed to reach the public EKS API endpoint. 203.0.113.0/24 is the RFC 5737
-# documentation range and will not match your real address.
-eks_public_access_cidrs = ["203.0.113.10/32"]
+# Keep the EKS API private. Operators reach it through AWS Client VPN.
+eks_endpoint_public_access = false
+eks_public_access_cidrs    = []
+
+client_vpn = {
+  enabled                    = true
+  client_cidr_block          = "10.255.0.0/22"
+  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
+  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
+  split_tunnel               = true
+  dns_servers                = []
+}
 
 kubernetes_version  = "1.35"
 node_instance_types = ["t3.medium"]
@@ -32,6 +50,7 @@ node_max_size       = 4
 rds_instance_class        = "db.t4g.micro"
 rds_allocated_storage     = 20
 rds_backup_retention_days = 3
+rds_username              = "app"
 rds_db_name               = "app"
 
 # Demo defaults for dev: cheap and easy to tear down. Use the staging or
@@ -45,6 +64,8 @@ rds_skip_final_snapshot = true
 # recovery window (which would block recreating it under the same name).
 ecr_force_delete         = true
 app_secret_recovery_days = 0
+
+alb_controller_version = "v3.4.2"
 
 # Email for CloudWatch alarm notifications. Leave empty to skip the subscription.
 alarm_email = ""
