@@ -8,9 +8,9 @@ variable "vpc_id" {
   description = "VPC ID."
 }
 
-variable "private_subnet_ids" {
+variable "database_subnet_ids" {
   type        = list(string)
-  description = "Private subnet IDs."
+  description = "Database subnet IDs."
 }
 
 variable "allowed_security_group_ids" {
