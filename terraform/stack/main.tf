@@ -1,34 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0, < 2.0.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.100"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.1"
-    }
-    http = {
-      source  = "hashicorp/http"
-      version = "~> 3.4"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = merge(var.tags, {
-      Project     = var.project
-      Environment = var.environment
-      ManagedBy   = "terraform"
-    })
-  }
-}
-
 locals {
   # Every AWS resource name in this environment derives from this prefix.
   name = "${var.project}-${var.environment}"
@@ -43,18 +12,19 @@ locals {
 }
 
 module "network" {
-  source                  = "../../modules/network"
+  source                  = "../modules/network"
   name                    = local.name
   vpc_cidr                = var.vpc_cidr
   azs                     = var.azs
   public_subnet_cidrs     = var.public_subnet_cidrs
   private_subnet_cidrs    = var.private_subnet_cidrs
+  database_subnet_cidrs   = var.database_subnet_cidrs
   nat_gateway_strategy    = var.nat_gateway_strategy
   kubernetes_cluster_name = local.name
 }
 
 module "eks" {
-  source                   = "../../modules/eks"
+  source                   = "../modules/eks"
   name                     = local.name
   kubernetes_version       = var.kubernetes_version
   private_subnet_ids       = module.network.private_subnet_ids
@@ -70,17 +40,39 @@ module "eks" {
   app_secret_recovery_days = var.app_secret_recovery_days
 }
 
+check "eks_public_access_cidrs" {
+  assert {
+    condition     = !var.eks_endpoint_public_access || length(var.eks_public_access_cidrs) > 0
+    error_message = "eks_public_access_cidrs must contain at least one CIDR when eks_endpoint_public_access is true."
+  }
+}
+
+module "client_vpn" {
+  count  = var.client_vpn.enabled ? 1 : 0
+  source = "../modules/client-vpn"
+
+  name                       = local.name
+  vpc_id                     = module.network.vpc_id
+  vpc_cidr                   = var.vpc_cidr
+  subnet_ids                 = module.network.private_subnet_ids
+  client_cidr_block          = var.client_vpn.client_cidr_block
+  server_certificate_arn     = var.client_vpn.server_certificate_arn
+  root_certificate_chain_arn = var.client_vpn.root_certificate_chain_arn
+  split_tunnel               = var.client_vpn.split_tunnel
+  dns_servers                = var.client_vpn.dns_servers
+}
+
 # RDS generates and stores the master password in Secrets Manager, so no
 # password is passed in or kept in Terraform state. The application secret is
 # created empty here and filled from that managed secret by
 # `make configure-app-secret ENV=<env>`.
 
 module "rds" {
-  source                      = "../../modules/rds"
+  source                      = "../modules/rds"
   name                        = local.name
   vpc_id                      = module.network.vpc_id
-  private_subnet_ids          = module.network.private_subnet_ids
-  allowed_security_group_ids  = [module.eks.cluster_security_group_id]
+  database_subnet_ids         = module.network.database_subnet_ids
+  allowed_security_group_ids  = concat([module.eks.cluster_security_group_id], var.client_vpn.enabled ? [module.client_vpn[0].security_group_id] : [])
   db_name                     = var.rds_db_name
   instance_class              = var.rds_instance_class
   allocated_storage           = var.rds_allocated_storage
@@ -90,6 +82,18 @@ module "rds" {
   multi_az                    = var.rds_multi_az
   deletion_protection         = var.rds_deletion_protection
   skip_final_snapshot         = var.rds_skip_final_snapshot
+}
+
+resource "aws_security_group_rule" "client_vpn_to_eks_api" {
+  count = var.client_vpn.enabled ? 1 : 0
+
+  type                     = "ingress"
+  security_group_id        = module.eks.cluster_security_group_id
+  source_security_group_id = module.client_vpn[0].security_group_id
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  description              = "Client VPN access to the private EKS API"
 }
 
 # IRSA role for the External Secrets Operator to read the app secret.
@@ -342,7 +346,7 @@ resource "aws_eks_addon" "ebs_csi" {
 }
 
 module "observability" {
-  source           = "../../modules/observability"
+  source           = "../modules/observability"
   name             = local.name
   eks_cluster_name = module.eks.cluster_name
   rds_identifier   = local.name

@@ -4,13 +4,15 @@
 *.swp
 
 # Terraform local/generated files.
-# Root module lock files (terraform/envs/*, terraform/foundation) are committed
+# Root module lock files (terraform/stack, terraform/foundation) are committed
 # so provider versions are reproducible; only module-local ones are ignored.
 **/.terraform/
 terraform/modules/**/.terraform.lock.hcl
+terraform/environments/*.tfvars
 **/terraform.tfvars
 **/*.tfstate
 **/*.tfstate.*
+bootstrap/backend-*.hcl
 *.tfplan
 *.plan
 crash.log
