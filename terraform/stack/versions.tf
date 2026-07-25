@@ -4,23 +4,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.56"
+      version = "~> 5.100"
     }
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.1"
     }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = {
-      Project   = "platform"
-      ManagedBy = "terraform"
-      Layer     = "foundation"
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
     }
   }
 }

@@ -13,19 +13,28 @@ if [ "$#" -ne 1 ]; then
 fi
 
 env="$1"
-tf_dir="terraform/envs/${env}"
+tf_dir="terraform/stack"
 env_json="gitops/environments/${env}/environment.json"
 
 for tool in aws kubectl jq python3; do
-  command -v "$tool" >/dev/null || { echo "${tool} is required" >&2; exit 1; }
+  command -v "$tool" >/dev/null || {
+    echo "${tool} is required" >&2
+    exit 1
+  }
 done
 
-[ -f "$env_json" ] || { echo "No such environment: ${env_json}" >&2; exit 1; }
+[ -f "$env_json" ] || {
+  echo "No such environment: ${env_json}" >&2
+  exit 1
+}
 
 failures=0
 
 pass() { printf 'ok    %s\n' "$1"; }
-fail() { printf 'FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+fail() {
+  printf 'FAIL  %s\n' "$1"
+  failures=$((failures + 1))
+}
 
 json_get() { python3 -c '
 import json, sys

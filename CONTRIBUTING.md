@@ -32,7 +32,8 @@ cluster.
 3. Render and validate: `make gitops-render ENV=dev`.
 4. Commit the inputs and the rendered output together.
 
-See [docs/gitops.md](docs/gitops.md) for what each field means.
+See [docs/configuration.md](docs/configuration.md) for the environment values
+that feed Terraform and GitOps.
 
 ## Commit messages
 

@@ -79,3 +79,7 @@ output "rds_db_name" {
 output "rds_username" {
   value = module.rds.username
 }
+
+output "client_vpn_endpoint_id" {
+  value = try(module.client_vpn[0].endpoint_id, null)
+}

@@ -70,7 +70,7 @@ else
 fi
 
 # Write the generated values into the backend config that `terraform init` reads.
-cat > "$backend_file" <<EOF
+cat >"$backend_file" <<EOF
 bucket         = "${bucket}"
 key            = "${project}/${env}/terraform.tfstate"
 region         = "${region}"

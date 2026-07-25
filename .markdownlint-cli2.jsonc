@@ -6,7 +6,7 @@
     "MD024": { "siblings_only": true },
     // The first heading is the title; the repository name is not a sentence.
     "MD041": true,
-    // Inline HTML is not used, but Mermaid fences are, and those are fine.
+    // Inline HTML is not used.
     "MD046": { "style": "fenced" }
   },
   "ignores": [

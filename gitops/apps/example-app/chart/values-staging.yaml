@@ -1,6 +1,9 @@
 # Staging values. image.repository/image.tag come from
 # gitops/environments/staging/environment.json (exampleApp.image).
 
+workload:
+  mode: stateless
+
 ingress:
   certificateArn: ""
   host: "example-app.staging.example.com"

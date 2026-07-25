@@ -18,8 +18,8 @@ kubeconfigs or ARNs from a real account in the report.
 - No credential is committed. `terraform.tfvars`, `.env`, kubeconfigs and
   private keys are gitignored.
 - The application secret in AWS Secrets Manager is created empty by Terraform
-  and filled by `make configure-app-secret`, so no database password ever
-  reaches Terraform state.
+  and filled by `make configure-app-secret`; the password value is not stored in
+  Terraform configuration.
 - The RDS master password is managed by RDS itself and read only at the moment
   the application secret is written.
 - External Secrets Operator reads Secrets Manager through IRSA. No AWS access
@@ -28,7 +28,7 @@ kubeconfigs or ARNs from a real account in the report.
   assume a role; there is no long-lived key.
 - Gitleaks runs on every pull request and on pushes to `main`.
 
-See [docs/secrets.md](docs/secrets.md) for the full flow.
+See [docs/deployment.md](docs/deployment.md) for the secret configuration step.
 
 ## Known weak defaults
 
