@@ -17,7 +17,9 @@ catalog, or a complete production operating model.
 For each environment, Terraform creates:
 
 - a VPC with public and private subnets;
+- isolated database subnets;
 - an EKS cluster with a managed node group;
+- AWS Client VPN for private operator access;
 - an ECR repository for the example application;
 - one PostgreSQL RDS instance;
 - Secrets Manager entries used by the example application;
@@ -32,6 +34,9 @@ ArgoCD manages the Kubernetes side:
 - metrics-server;
 - optional observability manifests already present in GitOps config;
 - a small example application chart.
+
+The example application can run as either a stateless `Deployment` or a
+stateful `StatefulSet` with a persistent volume claim. The default is stateless.
 
 ## Architecture
 
@@ -65,6 +70,17 @@ then ArgoCD reconciles them from the remote repository.
 `-- tests/                  # GitOps renderer tests
 ```
 
+## Documentation
+
+Use the README for the short path through the repository. The detailed docs are
+kept in one place:
+
+- [Configuration](docs/configuration.md): environment tfvars, account roles,
+  networking, EKS, database and GitOps values.
+- [Deployment](docs/deployment.md): the full dev deployment and destroy flow.
+- [Troubleshooting](docs/troubleshooting.md): common AWS, Terraform, ArgoCD and
+  Kubernetes failures.
+
 ## Prerequisites
 
 Install the tools checked by:
@@ -80,7 +96,8 @@ You also need:
 
 - an AWS account for the Terraform backend bootstrap;
 - a deployment role in the target account that Terraform can assume;
-- an EKS API CIDR allow list for your operator or VPN address;
+- ACM certificates for AWS Client VPN server and client certificate auth;
+- AWS VPN Client, or another OpenVPN-compatible client;
 - a Git remote that ArgoCD can read.
 
 The deployment role is not created by the EKS stack. Create it before running
@@ -109,25 +126,57 @@ deployment_role_arn = (
   "arn:aws:iam::111111111111:role/platform-terraform-deploy"
 )
 
-eks_public_access_cidrs = ["203.0.113.10/32"]
+database_subnet_cidrs = [
+  "10.10.21.0/24",
+  "10.10.22.0/24",
+]
+
+eks_endpoint_public_access = false
+eks_public_access_cidrs    = []
+
+client_vpn = {
+  enabled                    = true
+  client_cidr_block          = "10.255.0.0/22"
+  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
+  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
+  split_tunnel               = true
+  dns_servers                = []
+}
 ```
 
 Then run:
 
 ```bash
+# Create or reuse the remote Terraform state backend.
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
+
+# Initialize and check the shared Terraform stack.
 make init ENV=dev
 make validate ENV=dev
+
+# Review and apply the AWS infrastructure changes.
 make plan ENV=dev
 make apply ENV=dev
+
+# Point kubectl at the new EKS cluster.
 make kubeconfig ENV=dev
+
+# Fill the application secret without printing secret values.
 make configure-app-secret ENV=dev
+
+# Install ArgoCD before handing Kubernetes resources to GitOps.
 make deploy-argocd ENV=dev
+
+# Write Terraform outputs into the GitOps environment config.
 make configure-gitops-values ENV=dev
 make gitops-validate ENV=dev
+
+# Commit the generated GitOps environment changes for ArgoCD to read.
 git add gitops/
 git commit -m "chore: configure dev GitOps values"
 git push
+
+# Apply the root ArgoCD application and check the running environment.
 make apply-argocd-apps ENV=dev
 make verify ENV=dev
 ```
@@ -139,38 +188,25 @@ applying the root Application:
 make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 ```
 
-The full deployment path is in [docs/deployment.md](docs/deployment.md).
-
 ## Optional Services
 
 Observability can be enabled or disabled per environment in
 `gitops/environments/<env>/environment.json`.
 
+The example application workload type is selected in the environment values
+file:
+
+```yaml
+workload:
+  mode: stateless
+```
+
+Use `stateful` to render a `StatefulSet` with a `gp3` persistent volume claim
+per pod.
+
 This repository currently provisions PostgreSQL through the `rds` module. It
 does not currently include Redis, MySQL, Aurora, MSK, OpenSearch, DocumentDB, or
 a service catalog layer.
-
-## Validation
-
-Run local static checks with:
-
-```bash
-make check
-```
-
-Run Terraform checks for one environment with:
-
-```bash
-make init ENV=dev
-make validate ENV=dev
-make plan ENV=dev
-```
-
-Run live cluster checks after deployment with:
-
-```bash
-make verify ENV=dev
-```
 
 ## Destroy
 
@@ -199,7 +235,3 @@ The project does not provide:
 - backup restore runbooks;
 - production incident response procedures;
 - cost controls beyond the documented small dev defaults.
-
-Configuration details are in [docs/configuration.md](docs/configuration.md).
-Operational steps are in [docs/deployment.md](docs/deployment.md). Common
-failures are in [docs/troubleshooting.md](docs/troubleshooting.md).

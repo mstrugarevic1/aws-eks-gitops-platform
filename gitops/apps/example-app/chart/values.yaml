@@ -1,5 +1,10 @@
 replicaCount: 2
 
+workload:
+  # stateless renders a Deployment.
+  # stateful renders a StatefulSet with one persistent volume claim per pod.
+  mode: stateless
+
 # ArgoCD overrides repository and tag with Helm parameters taken from
 # gitops/environments/<env>/environment.json (exampleApp.image). These defaults
 # only exist so `helm lint` and `helm template` work without an environment.
@@ -59,6 +64,11 @@ autoscaling:
 podDisruptionBudget:
   enabled: true
   maxUnavailable: 1
+
+persistence:
+  size: 1Gi
+  storageClassName: gp3
+  mountPath: /data
 
 metrics:
   enabled: true

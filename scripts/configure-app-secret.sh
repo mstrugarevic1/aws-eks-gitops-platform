@@ -30,7 +30,10 @@ if [ ! -f "$tf_vars" ]; then
 fi
 
 for tool in aws jq; do
-  command -v "$tool" >/dev/null || { echo "${tool} is required" >&2; exit 1; }
+  command -v "$tool" >/dev/null || {
+    echo "${tool} is required" >&2
+    exit 1
+  }
 done
 
 # Read every Terraform output up front so a missing one fails before anything is

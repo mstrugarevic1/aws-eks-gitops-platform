@@ -1,4 +1,4 @@
-# Troubleshooting
+# EKS GitOps Platform: Troubleshooting
 
 ## Wrong AWS Account
 
@@ -53,13 +53,34 @@ make init ENV=dev
 **Check.**
 
 ```bash
-curl -s https://checkip.amazonaws.com
 aws eks describe-cluster --name my-platform-dev \
-  --query 'cluster.resourcesVpcConfig.publicAccessCidrs'
+  --query 'cluster.resourcesVpcConfig'
+aws ec2 describe-client-vpn-endpoints \
+  --query 'ClientVpnEndpoints[].ClientVpnEndpointId'
 ```
 
-**Fix.** Add your current operator or VPN CIDR to
-`eks_public_access_cidrs`, then run `make plan` and `make apply`.
+**Fix.** Connect the AWS Client VPN and make sure `client_vpn.enabled = true`.
+If you intentionally use public EKS access, set `eks_endpoint_public_access =
+true` and restrict `eks_public_access_cidrs` to a real operator or VPN egress
+CIDR.
+
+## Client VPN Cannot Connect
+
+**Symptom.** AWS VPN Client cannot connect, or connects but `kubectl` still
+times out.
+
+**Check.**
+
+```bash
+aws ec2 describe-client-vpn-endpoints
+aws ec2 describe-client-vpn-target-networks \
+  --client-vpn-endpoint-id cvpn-endpoint-id
+```
+
+**Fix.** Confirm the ACM server and client root certificate ARNs in
+`client_vpn` are real, the VPN endpoint has target network associations, and
+the client profile is imported into the VPN client with the matching client
+certificate and private key.
 
 ## ArgoCD Cannot Read The Repository
 
