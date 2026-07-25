@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "this" {
   name       = var.name
-  subnet_ids = var.private_subnet_ids
+  subnet_ids = var.database_subnet_ids
 }
 
 resource "aws_security_group" "this" {

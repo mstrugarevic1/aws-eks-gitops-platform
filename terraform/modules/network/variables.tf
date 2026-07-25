@@ -38,6 +38,16 @@ variable "private_subnet_cidrs" {
   }
 }
 
+variable "database_subnet_cidrs" {
+  type        = list(string)
+  description = "Database subnet CIDRs. One per availability zone; enforced by a precondition on the subnet resource."
+
+  validation {
+    condition     = length(var.database_subnet_cidrs) > 0
+    error_message = "At least one database subnet CIDR is required."
+  }
+}
+
 variable "kubernetes_cluster_name" {
   type        = string
   description = "Optional EKS cluster name used for Kubernetes subnet discovery tags."

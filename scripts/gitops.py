@@ -56,7 +56,7 @@ def to_yaml(value, indent=0):
     if isinstance(value, dict):
         lines = []
         for key, item in value.items():
-            if isinstance(item, (dict, list)):
+            if isinstance(item, dict | list):
                 lines.append(f"{pad}{key}:")
                 lines.append(to_yaml(item, indent + 2))
             else:
@@ -65,7 +65,7 @@ def to_yaml(value, indent=0):
     if isinstance(value, list):
         lines = []
         for item in value:
-            if isinstance(item, (dict, list)):
+            if isinstance(item, dict | list):
                 lines.append(f"{pad}-")
                 lines.append(to_yaml(item, indent + 2))
             else:

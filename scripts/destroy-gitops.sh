@@ -17,10 +17,16 @@ fi
 
 env="$1"
 env_json="gitops/environments/${env}/environment.json"
-[ -f "$env_json" ] || { echo "No such environment: ${env_json}" >&2; exit 1; }
+[ -f "$env_json" ] || {
+  echo "No such environment: ${env_json}" >&2
+  exit 1
+}
 
 for tool in kubectl jq python3; do
-  command -v "$tool" >/dev/null || { echo "${tool} is required" >&2; exit 1; }
+  command -v "$tool" >/dev/null || {
+    echo "${tool} is required" >&2
+    exit 1
+  }
 done
 
 json_get() { python3 -c '
@@ -42,7 +48,7 @@ timeout="${DESTROY_TIMEOUT:-600}"
 wait_for() {
   local label="$1" deadline
   shift
-  deadline=$(( $(date +%s) + timeout ))
+  deadline=$(($(date +%s) + timeout))
   echo "Waiting for ${label} (timeout ${timeout}s)"
   while ! "$@"; do
     if [ "$(date +%s)" -ge "$deadline" ]; then
@@ -57,20 +63,29 @@ wait_for() {
 no_child_apps() {
   local remaining
   remaining="$(kubectl -n "$argocd_ns" get applications -o json | jq -r '[.items[].metadata.name] | join(", ")')"
-  [ -z "$remaining" ] || { echo "  still present: ${remaining}"; return 1; }
+  [ -z "$remaining" ] || {
+    echo "  still present: ${remaining}"
+    return 1
+  }
 }
 
 no_ingresses() {
   local remaining
   remaining="$(kubectl get ingress --all-namespaces -o json | jq -r '[.items[] | "\(.metadata.namespace)/\(.metadata.name)"] | join(", ")')"
-  [ -z "$remaining" ] || { echo "  still present: ${remaining}"; return 1; }
+  [ -z "$remaining" ] || {
+    echo "  still present: ${remaining}"
+    return 1
+  }
 }
 
 no_lb_services() {
   local remaining
-  remaining="$(kubectl get services --all-namespaces -o json \
-    | jq -r '[.items[] | select(.spec.type == "LoadBalancer") | "\(.metadata.namespace)/\(.metadata.name)"] | join(", ")')"
-  [ -z "$remaining" ] || { echo "  still present: ${remaining}"; return 1; }
+  remaining="$(kubectl get services --all-namespaces -o json |
+    jq -r '[.items[] | select(.spec.type == "LoadBalancer") | "\(.metadata.namespace)/\(.metadata.name)"] | join(", ")')"
+  [ -z "$remaining" ] || {
+    echo "  still present: ${remaining}"
+    return 1
+  }
 }
 
 if ! kubectl -n "$argocd_ns" get application "$root_app" >/dev/null 2>&1; then
@@ -97,8 +112,8 @@ for ns in "$app_ns" "$obs_ns"; do
     leftovers=1
   fi
 
-  stuck="$(kubectl -n "$ns" get all -o json \
-    | jq -r '[.items[] | select(.metadata.deletionTimestamp != null and (.metadata.finalizers | length) > 0) | .metadata.name] | join(", ")')"
+  stuck="$(kubectl -n "$ns" get all -o json |
+    jq -r '[.items[] | select(.metadata.deletionTimestamp != null and (.metadata.finalizers | length) > 0) | .metadata.name] | join(", ")')"
   if [ -n "$stuck" ]; then
     echo "WARNING ${ns} has resources stuck on finalizers: ${stuck}"
     leftovers=1
