@@ -13,10 +13,11 @@ RUN groupadd --gid 10001 app && useradd --uid 10001 --gid 10001 --no-create-home
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/opt/python/lib/python3.12/site-packages \
     PORT=8000
 
-COPY --from=build /install/prefix /opt/python
+# Installed into the default prefix so site-packages resolves without pinning
+# the Python minor version.
+COPY --from=build /install/prefix /usr/local
 COPY main.py /app/main.py
 
 USER 10001:10001
