@@ -1,103 +1,68 @@
-# AWS EKS GitOps Platform
+# Multi-Environment AWS EKS GitOps Platform
 
-Personal learning repository for an AWS EKS platform managed with Terraform and
-ArgoCD.
+This repository deploys isolated `dev`, `staging`, and `production` AWS
+environments using the same Terraform and GitOps architecture with
+environment-specific configuration.
 
-Terraform provisions the AWS infrastructure. ArgoCD manages Kubernetes add-ons
-and the example application after the cluster exists. The project is meant for
-practice and portfolio review, not as a reusable platform product.
+This is a personal learning and practice project provided as-is. Review
+security, availability, and cost settings before using it outside disposable
+environments.
 
-## Architecture
+Terraform provisions AWS infrastructure. ArgoCD manages Kubernetes add-ons and
+workloads after each EKS cluster exists. The sample application exists only to
+validate the platform end to end.
 
-![AWS EKS GitOps platform architecture](docs/images/architecture.png)
+## Overview
 
-The diagram will be added manually.
+Each environment has its own Terraform variables, Terraform backend, AWS
+resources, GitOps environment config, and rendered ArgoCD Applications.
 
-## What This Demonstrates
+Terraform creates the AWS side:
 
-- AWS infrastructure provisioning with Terraform.
-- EKS cluster setup with managed node groups and IRSA.
-- GitOps reconciliation with ArgoCD Applications.
-- Kubernetes add-on management through Helm and manifests.
-- A small Python application deployed through a Helm chart.
-- Integration with RDS PostgreSQL through External Secrets Operator.
-- Offline validation for Terraform, GitOps rendering, Helm, Kubernetes
-  manifests, shell scripts, Python, Markdown, workflows, and secret scanning.
-
-## Ownership Boundary
-
-Terraform owns AWS resources:
-
-- VPC, public subnets, private subnets, database subnets, routing, and NAT;
+- VPC, public, private, and database subnets, routing, and NAT;
 - EKS cluster and managed node groups;
 - AWS Client VPN;
 - RDS PostgreSQL;
 - ECR;
 - Secrets Manager entries;
 - IAM and IRSA roles;
-- CloudWatch resources;
-- Terraform backend resources.
+- CloudWatch resources.
 
-ArgoCD owns resources inside Kubernetes:
+ArgoCD manages the Kubernetes side:
 
 - AWS Load Balancer Controller;
 - Cluster Autoscaler;
 - External Secrets Operator;
 - metrics-server;
 - Grafana, VictoriaMetrics, Loki, and Promtail;
-- the example application.
+- sample application.
 
-ArgoCD itself is installed by Helm before GitOps reconciliation starts.
+## Architecture
 
-## Main Components
+![AWS EKS GitOps platform architecture](architecture.png)
 
-- `terraform/stack`: shared Terraform root for the EKS platform.
-- `terraform/foundation`: optional GitHub OIDC role for image pushes.
-- `terraform/modules`: network, EKS, Client VPN, RDS, and observability modules.
-- `gitops/base`: component registry used by the GitOps renderer.
-- `gitops/environments`: rendered ArgoCD root and child Applications.
-- `gitops/addons/observability`: GitOps-managed observability values and
-  dashboards.
-- `gitops/apps/example-app/chart`: stateless example application Helm chart.
-- `app`: minimal Python web application and Dockerfile.
-- `scripts`: helper scripts for GitOps rendering, secrets, verification, and
-  cleanup.
+## Environments
 
-## Repository Structure
+The environment list is defined in
+`gitops/environments/environments.json`.
 
 ```text
-.
-|-- app/
-|-- bootstrap/
-|-- deploy/
-|   `-- argocd/
-|-- docs/
-|-- gitops/
-|   |-- addons/
-|   |-- apps/
-|   |-- base/
-|   `-- environments/
-|-- scripts/
-|-- terraform/
-|   |-- environments/
-|   |-- foundation/
-|   |-- modules/
-|   `-- stack/
-`-- tests/
+dev
+staging
+production
 ```
 
-## Minimal Quick Start
+Terraform examples live in `terraform/environments/`. GitOps environment config
+lives in `gitops/environments/<env>/environment.json`.
 
-Use `dev` first and keep it disposable.
+## Deployment
+
+Start with `dev`, then repeat the same commands with `ENV=staging` or
+`ENV=production` after creating the matching tfvars file.
 
 ```bash
 make prerequisites
 cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
-```
-
-Edit `terraform/environments/dev.tfvars`, then run:
-
-```bash
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
 make init ENV=dev
 make validate ENV=dev
@@ -108,70 +73,62 @@ make configure-app-secret ENV=dev
 make deploy-argocd ENV=dev
 make configure-gitops-values ENV=dev
 make gitops-validate ENV=dev
-```
-
-Commit and push the rendered GitOps environment files so ArgoCD can read them,
-then apply the root Application:
-
-```bash
 make apply-argocd-apps ENV=dev
 make verify ENV=dev
 ```
 
-For private repositories, register an ArgoCD deploy key before applying the root
-Application:
+Private repositories also need ArgoCD repository credentials:
 
 ```bash
 make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 ```
+
+## Validation
+
+```bash
+make fmt-check
+make check
+terraform -chdir=terraform/stack init -backend=false
+terraform -chdir=terraform/stack validate
+terraform -chdir=terraform/foundation init -backend=false
+terraform -chdir=terraform/foundation validate
+```
+
+The CI workflow also runs TFLint, Checkov, Ruff, ShellCheck, Helm lint,
+kubeconform, actionlint, markdownlint, and Gitleaks.
 
 ## Documentation
 
 - [Configuration](docs/configuration.md)
 - [Deployment](docs/deployment.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [Example application](app/README.md)
+- [Sample application](app/README.md)
 
-## Validation Commands
+## Cleanup
+
+Destroy Kubernetes-managed resources before Terraform-managed AWS resources:
 
 ```bash
-make fmt-check
-make validate ENV=dev
-make check
-terraform -chdir=terraform/foundation init -backend=false
-terraform -chdir=terraform/foundation validate
+make destroy-gitops ENV=dev
+make destroy ENV=dev
 ```
 
-The GitHub workflow also runs TFLint, Checkov, Ruff, ShellCheck, Helm lint,
-Helm template, kubeconform, actionlint, markdownlint, and Gitleaks.
+Destroy the Terraform backend only after the environment state is no longer
+needed:
 
-## Scope And Limitations
+```bash
+./bootstrap/destroy-bootstrap.sh my-platform dev us-east-1 DELETE_TERRAFORM_BACKEND
+```
 
-- The example app is a stateless Deployment connected to PostgreSQL on RDS.
-- The project does not deploy a complete production operating model.
-- The `production` environment files are examples of stricter defaults, not a
-  claim that the repository is production-ready.
-- Real AWS behavior still depends on account limits, IAM permissions, regional
-  service availability, certificate setup, quotas, and current AWS pricing.
-- Destroy Kubernetes-managed resources before destroying Terraform-managed AWS
-  infrastructure, because Kubernetes controllers can create AWS load balancers.
+## Pending Improvements
+
+- Replace placeholder AWS account IDs, certificate ARNs, VPC IDs, role ARNs,
+  and image repository values before applying an environment.
+- Validate the full flow in real AWS accounts for `dev`, `staging`, and
+  `production`.
+- Add the final architecture diagram if `architecture.png` changes.
 
 ## Disclaimer
 
-This repository is a personal learning and practice project.
-
-It is provided as-is and is not a production-ready platform, managed
-service, official reference architecture, or guarantee of any particular
-technical or operational outcome.
-
-The configuration has not been validated for every AWS account, region,
-workload, security requirement, availability requirement, or cost profile.
-
-Review and adapt all infrastructure, IAM, networking, security, database,
-backup, monitoring, and operational settings before using any part of the
-project outside a disposable environment.
-
-AWS resources created by this project may incur charges.
-
-No guarantee is made regarding correctness, security, availability,
-compatibility, cost, or operational outcome.
+This repository is provided as-is. No guarantee is made regarding correctness,
+security, availability, compatibility, cost, or operational outcome.

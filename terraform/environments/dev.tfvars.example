@@ -53,13 +53,13 @@ rds_backup_retention_days = 3
 rds_username              = "app"
 rds_db_name               = "app"
 
-# Demo defaults for dev: cheap and easy to tear down. Use the staging or
+# Disposable dev defaults: cheap and easy to tear down. Use the staging or
 # production example values before storing anything you care about.
 rds_multi_az            = false
 rds_deletion_protection = false
 rds_skip_final_snapshot = true
 
-# Demo defaults: destroy removes the ECR repository even if it still holds
+# Disposable defaults: destroy removes the ECR repository even if it still holds
 # images, and deletes the application secret immediately instead of keeping a
 # recovery window (which would block recreating it under the same name).
 ecr_force_delete         = true

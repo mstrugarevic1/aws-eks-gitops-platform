@@ -30,7 +30,7 @@
     "observability": true
   },
   "apps": {
-    "exampleApp": false
+    "exampleApp": true
   },
   "exampleApp": {
     "valuesFile": "values-production.yaml",

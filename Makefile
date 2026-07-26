@@ -133,7 +133,6 @@ deploy-argocd:
 
 # Registers the Git repository ArgoCD pulls from. SSH_KEY_FILE is a path to a
 # private deploy key; it is read by kubectl and never written into the repo.
-# See docs/gitops.md for how to create the key.
 configure-argocd-repository:
 	@test -n "$(SSH_KEY_FILE)" || { echo "usage: make configure-argocd-repository ENV=<env> SSH_KEY_FILE=~/.ssh/argocd_deploy_key"; exit 1; }
 	@test -f "$(SSH_KEY_FILE)" || { echo "no such key file: $(SSH_KEY_FILE)"; exit 1; }

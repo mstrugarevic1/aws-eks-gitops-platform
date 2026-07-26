@@ -6,7 +6,7 @@ set -euo pipefail
 
 if [ "$#" -ne 4 ]; then
   echo "Usage: $0 <project> <env> <aws-region> DELETE_TERRAFORM_BACKEND" >&2
-  echo "This deletes Terraform backend resources only. It is for local/demo cleanup." >&2
+  echo "This deletes Terraform backend resources only. It is for disposable-environment cleanup." >&2
   exit 1
 fi
 

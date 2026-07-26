@@ -127,7 +127,7 @@ make configure-app-secret ENV=dev
 make configure-gitops-values ENV=dev
 make gitops-validate ENV=dev
 git add gitops/
-git commit -m "chore: refresh dev GitOps values"
+git commit -m "Refresh dev GitOps values"
 git push
 ```
 

@@ -166,12 +166,12 @@ variable "rds_db_name" {
 
 variable "ecr_force_delete" {
   type        = bool
-  description = "Delete the ECR repository on destroy even if it still holds images. Convenient for demo environments, unsafe for production."
+  description = "Delete the ECR repository on destroy even if it still holds images. Convenient for disposable environments, unsafe for production."
 }
 
 variable "app_secret_recovery_days" {
   type        = number
-  description = "Secrets Manager recovery window for the application secret. 0 deletes immediately (demo, allows instant recreate); 7-30 keeps a recovery window."
+  description = "Secrets Manager recovery window for the application secret. 0 deletes immediately for disposable environments; 7-30 keeps a recovery window."
 }
 
 variable "alb_controller_version" {

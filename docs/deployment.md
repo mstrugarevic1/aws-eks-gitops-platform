@@ -1,6 +1,8 @@
 # EKS GitOps Platform: Deployment
 
-This is the complete path for one environment. The examples use `dev`.
+This is the complete path for one environment. The examples use `dev`; repeat
+the same flow with `ENV=staging` or `ENV=production` after creating the matching
+tfvars file.
 
 ## 1. Check Local Tools
 
@@ -137,7 +139,7 @@ Commit and push the GitOps changes:
 
 ```bash
 git add gitops/
-git commit -m "chore: configure dev GitOps values"
+git commit -m "Configure dev GitOps values"
 git push
 ```
 
