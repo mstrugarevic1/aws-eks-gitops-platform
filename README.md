@@ -49,60 +49,9 @@ lives in `gitops/environments/<env>/environment.json`.
 
 ## Deployment
 
-Start with `dev`, then repeat the same commands with `ENV=staging` or
-`ENV=production` after creating the matching tfvars file.
-
-```bash
-# Check local tools and AWS credentials.
-make prerequisites
-
-# Create the ignored environment tfvars file.
-cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
-
-# Create or reuse the Terraform backend for this environment.
-make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
-
-# Initialize the Terraform stack.
-make init ENV=dev
-
-# Validate Terraform configuration.
-make validate ENV=dev
-
-# Review the AWS infrastructure changes.
-make plan ENV=dev
-
-# Apply the AWS infrastructure.
-make apply ENV=dev
-
-# Connect the AWS Client VPN first because the EKS API endpoint is private.
-
-# Configure kubectl for the new EKS cluster.
-make kubeconfig ENV=dev
-
-# Fill the application secret from RDS outputs.
-make configure-app-secret ENV=dev
-
-# Install ArgoCD before GitOps reconciliation.
-make deploy-argocd ENV=dev
-
-# Write Terraform outputs into GitOps environment config.
-make configure-gitops-values ENV=dev
-
-# Validate rendered GitOps configuration.
-make gitops-validate ENV=dev
-
-# Apply the root ArgoCD Application.
-make apply-argocd-apps ENV=dev
-
-# Run read-only live checks.
-make verify ENV=dev
-```
-
-Private repositories also need ArgoCD repository credentials:
-
-```bash
-make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
-```
+Use [docs/deployment.md](docs/deployment.md) for the complete deployment guide:
+prerequisites, required values, credentials, networking, commands, expected
+flow, verification, and the relevant failure checks.
 
 ## Validation
 
@@ -117,9 +66,7 @@ kubeconform, actionlint, markdownlint, and Gitleaks.
 
 ## Documentation
 
-- [Deployment](docs/deployment.md): command order for creating an environment
-- [Configuration](docs/configuration.md): what to put in environment tfvars and GitOps config
-- [Troubleshooting](docs/troubleshooting.md): symptom-driven fixes when a deployment step fails
+- [Deployment guide](docs/deployment.md): complete environment deployment path
 - [Sample application](app/README.md)
 
 ## Cleanup
