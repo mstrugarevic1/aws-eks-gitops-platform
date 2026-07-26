@@ -107,10 +107,7 @@ make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 ```bash
 make fmt-check
 make check
-terraform -chdir=terraform/stack init -backend=false
-terraform -chdir=terraform/stack validate
-terraform -chdir=terraform/foundation init -backend=false
-terraform -chdir=terraform/foundation validate
+make validate-offline
 ```
 
 The CI workflow also runs TFLint, Checkov, Ruff, ShellCheck, Helm lint,

@@ -11,7 +11,7 @@ TF_VARS := ../environments/$(ENV).tfvars
 BACKEND_CONFIG := ../../bootstrap/backend-$(ENV).hcl
 GITOPS_ENV_DIR := gitops/environments/$(ENV)
 
-.PHONY: prerequisites bootstrap init fmt fmt-check validate plan apply destroy destroy-gitops clean check kubeconfig configure-app-secret configure-gitops-values set-image-tag build-app gitops-render gitops-validate deploy-argocd configure-argocd-repository apply-argocd-apps verify render-observability
+.PHONY: prerequisites bootstrap init fmt fmt-check validate validate-offline plan apply destroy destroy-gitops clean check kubeconfig configure-app-secret configure-gitops-values set-image-tag build-app gitops-render gitops-validate deploy-argocd configure-argocd-repository apply-argocd-apps verify render-observability
 
 # Fails on the first missing tool instead of half way through a deploy.
 prerequisites:
@@ -44,6 +44,16 @@ fmt-check:
 
 validate:
 	cd $(TF_DIR) && terraform validate
+
+validate-offline: fmt-check
+	@set -e; \
+	stack_data="$$(mktemp -d /tmp/tf-stack.XXXXXX)"; \
+	foundation_data="$$(mktemp -d /tmp/tf-foundation.XXXXXX)"; \
+	trap 'rm -rf "$$stack_data" "$$foundation_data"' EXIT; \
+	TF_DATA_DIR="$$stack_data" terraform -chdir=terraform/stack init -backend=false; \
+	TF_DATA_DIR="$$stack_data" terraform -chdir=terraform/stack validate; \
+	TF_DATA_DIR="$$foundation_data" terraform -chdir=terraform/foundation init -backend=false; \
+	TF_DATA_DIR="$$foundation_data" terraform -chdir=terraform/foundation validate
 
 plan:
 	cd $(TF_DIR) && terraform plan -var-file=$(TF_VARS)
