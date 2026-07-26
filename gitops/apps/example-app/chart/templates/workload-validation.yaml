@@ -1,3 +1,0 @@
-{{- if not (has .Values.workload.mode (list "stateless" "stateful")) -}}
-{{- fail "workload.mode must be stateless or stateful" -}}
-{{- end -}}

@@ -25,9 +25,9 @@ spec:
       targetRevision: "0.86.0"
       helm:
         valueFiles:
-          - "$values/../../deploy/observability/victoria-metrics-k8s-stack-values.yaml"
+          - "$values/gitops/addons/observability/victoria-metrics-k8s-stack-values.yaml"
           - "$values/gitops/environments/staging/values/vm-stack-values.yaml"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
+      repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"

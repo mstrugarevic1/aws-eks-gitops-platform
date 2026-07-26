@@ -1,6 +1,6 @@
 {
   "name": "production",
-  "repoURL": "git@github.com:mstrugarevic1/eks-gitops-platform.git",
+  "repoURL": "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git",
   "targetRevision": "main",
   "destinationServer": "https://kubernetes.default.svc",
   "argocdNamespace": "argocd",
@@ -23,7 +23,6 @@
     "app": "example-app"
   },
   "addons": {
-    "storageclass": true,
     "metricsServer": true,
     "awsLoadBalancerController": true,
     "clusterAutoscaler": true,

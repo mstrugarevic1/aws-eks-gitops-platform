@@ -1,237 +1,177 @@
-# EKS GitOps Platform
+# AWS EKS GitOps Platform
 
-[![checks](https://github.com/mstrugarevic1/eks-gitops-platform/actions/workflows/checks.yml/badge.svg?branch=main&event=push)](https://github.com/mstrugarevic1/eks-gitops-platform/actions/workflows/checks.yml)
+Personal learning repository for an AWS EKS platform managed with Terraform and
+ArgoCD.
 
-This repository is a practical starting point for running the same EKS platform
-in separate AWS accounts.
+Terraform provisions the AWS infrastructure. ArgoCD manages Kubernetes add-ons
+and the example application after the cluster exists. The project is meant for
+practice and portfolio review, not as a reusable platform product.
 
-Terraform creates the AWS infrastructure. ArgoCD installs and manages
-Kubernetes add-ons and workloads after the cluster is available.
+## Architecture
 
-It is intended for engineers who want a small, readable EKS boilerplate with a
-clear ownership boundary. It is not a managed platform product, a service
-catalog, or a complete production operating model.
+![AWS EKS GitOps platform architecture](docs/images/architecture.png)
 
-## What It Deploys
+The diagram will be added manually.
 
-For each environment, Terraform creates:
+## What This Demonstrates
 
-- a VPC with public and private subnets;
-- isolated database subnets;
-- an EKS cluster with a managed node group;
-- AWS Client VPN for private operator access;
-- an ECR repository for the example application;
-- one PostgreSQL RDS instance;
-- Secrets Manager entries used by the example application;
-- IAM and IRSA roles for cluster add-ons;
-- CloudWatch alarms and a dashboard.
+- AWS infrastructure provisioning with Terraform.
+- EKS cluster setup with managed node groups and IRSA.
+- GitOps reconciliation with ArgoCD Applications.
+- Kubernetes add-on management through Helm and manifests.
+- A small Python application deployed through a Helm chart.
+- Integration with RDS PostgreSQL through External Secrets Operator.
+- Offline validation for Terraform, GitOps rendering, Helm, Kubernetes
+  manifests, shell scripts, Python, Markdown, workflows, and secret scanning.
 
-ArgoCD manages the Kubernetes side:
+## Ownership Boundary
+
+Terraform owns AWS resources:
+
+- VPC, public subnets, private subnets, database subnets, routing, and NAT;
+- EKS cluster and managed node groups;
+- AWS Client VPN;
+- RDS PostgreSQL;
+- ECR;
+- Secrets Manager entries;
+- IAM and IRSA roles;
+- CloudWatch resources;
+- Terraform backend resources.
+
+ArgoCD owns resources inside Kubernetes:
 
 - AWS Load Balancer Controller;
 - Cluster Autoscaler;
 - External Secrets Operator;
 - metrics-server;
-- optional observability manifests already present in GitOps config;
-- a small example application chart.
+- Grafana, VictoriaMetrics, Loki, and Promtail;
+- the example application.
 
-The example application can run as either a stateless `Deployment` or a
-stateful `StatefulSet` with a persistent volume claim. The default is stateless.
+ArgoCD itself is installed by Helm before GitOps reconciliation starts.
 
-## Architecture
+## Main Components
 
-![EKS GitOps platform architecture](architecture.png)
-
-Terraform and ArgoCD deliberately do different jobs:
-
-- Terraform owns AWS infrastructure.
-- ArgoCD owns Kubernetes add-ons and workloads.
-
-Terraform outputs are copied into `gitops/environments/<env>/environment.json`
-by `make configure-gitops-values`. Those GitOps files are committed and pushed,
-then ArgoCD reconciles them from the remote repository.
+- `terraform/stack`: shared Terraform root for the EKS platform.
+- `terraform/foundation`: optional GitHub OIDC role for image pushes.
+- `terraform/modules`: network, EKS, Client VPN, RDS, and observability modules.
+- `gitops/base`: component registry used by the GitOps renderer.
+- `gitops/environments`: rendered ArgoCD root and child Applications.
+- `gitops/addons/observability`: GitOps-managed observability values and
+  dashboards.
+- `gitops/apps/example-app/chart`: stateless example application Helm chart.
+- `app`: minimal Python web application and Dockerfile.
+- `scripts`: helper scripts for GitOps rendering, secrets, verification, and
+  cleanup.
 
 ## Repository Structure
 
 ```text
 .
-|-- app/                    # example Python web app and Dockerfile
-|-- bootstrap/              # remote Terraform backend bootstrap scripts
+|-- app/
+|-- bootstrap/
 |-- deploy/
-|   `-- argocd/             # ArgoCD Helm install values
-|-- docs/                   # configuration, deployment and troubleshooting
-|-- gitops/                 # ArgoCD environment config and rendered apps
-|-- scripts/                # deployment, GitOps and verification helpers
+|   `-- argocd/
+|-- docs/
+|-- gitops/
+|   |-- addons/
+|   |-- apps/
+|   |-- base/
+|   `-- environments/
+|-- scripts/
 |-- terraform/
-|   |-- environments/       # per-environment tfvars examples
-|   |-- foundation/         # optional GitHub OIDC role for ECR pushes
-|   |-- modules/            # network, EKS, RDS and observability modules
-|   `-- stack/              # shared Terraform root module
-`-- tests/                  # GitOps renderer tests
+|   |-- environments/
+|   |-- foundation/
+|   |-- modules/
+|   `-- stack/
+`-- tests/
 ```
 
-## Documentation
+## Minimal Quick Start
 
-Use the README for the short path through the repository. The detailed docs are
-kept in one place:
-
-- [Configuration](docs/configuration.md): environment tfvars, account roles,
-  networking, EKS, database and GitOps values.
-- [Deployment](docs/deployment.md): the full dev deployment and destroy flow.
-- [Troubleshooting](docs/troubleshooting.md): common AWS, Terraform, ArgoCD and
-  Kubernetes failures.
-
-## Prerequisites
-
-Install the tools checked by:
+Use `dev` first and keep it disposable.
 
 ```bash
 make prerequisites
-```
-
-That target checks for `aws`, `terraform`, `kubectl`, `helm`, `jq`, `python3`,
-`openssl`, and usable AWS credentials.
-
-You also need:
-
-- an AWS account for the Terraform backend bootstrap;
-- a deployment role in the target account that Terraform can assume;
-- ACM certificates for AWS Client VPN server and client certificate auth;
-- AWS VPN Client, or another OpenVPN-compatible client;
-- a Git remote that ArgoCD can read.
-
-The deployment role is not created by the EKS stack. Create it before running
-`make plan`.
-
-## Quick Start
-
-Start with `dev`. Keep the first deployment small: single NAT gateway, public
-EKS API restricted to your IP, small node group, no database deletion
-protection.
-
-```bash
 cp terraform/environments/dev.tfvars.example terraform/environments/dev.tfvars
 ```
 
-Edit `terraform/environments/dev.tfvars`:
-
-```hcl
-project     = "my-platform"
-environment = "dev"
-aws_region  = "us-east-1"
-
-aws_account_id = "111111111111"
-
-deployment_role_arn = (
-  "arn:aws:iam::111111111111:role/platform-terraform-deploy"
-)
-
-database_subnet_cidrs = [
-  "10.10.21.0/24",
-  "10.10.22.0/24",
-]
-
-eks_endpoint_public_access = false
-eks_public_access_cidrs    = []
-
-client_vpn = {
-  enabled                    = true
-  client_cidr_block          = "10.255.0.0/22"
-  server_certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/server-certificate-id"
-  root_certificate_chain_arn = "arn:aws:acm:us-east-1:111111111111:certificate/client-root-certificate-id"
-  split_tunnel               = true
-  dns_servers                = []
-}
-```
-
-Then run:
+Edit `terraform/environments/dev.tfvars`, then run:
 
 ```bash
-# Create or reuse the remote Terraform state backend.
 make bootstrap ENV=dev AWS_REGION=us-east-1 PROJECT=my-platform
-
-# Initialize and check the shared Terraform stack.
 make init ENV=dev
 make validate ENV=dev
-
-# Review and apply the AWS infrastructure changes.
 make plan ENV=dev
 make apply ENV=dev
-
-# Point kubectl at the new EKS cluster.
 make kubeconfig ENV=dev
-
-# Fill the application secret without printing secret values.
 make configure-app-secret ENV=dev
-
-# Install ArgoCD before handing Kubernetes resources to GitOps.
 make deploy-argocd ENV=dev
-
-# Write Terraform outputs into the GitOps environment config.
 make configure-gitops-values ENV=dev
 make gitops-validate ENV=dev
+```
 
-# Commit the generated GitOps environment changes for ArgoCD to read.
-git add gitops/
-git commit -m "chore: configure dev GitOps values"
-git push
+Commit and push the rendered GitOps environment files so ArgoCD can read them,
+then apply the root Application:
 
-# Apply the root ArgoCD application and check the running environment.
+```bash
 make apply-argocd-apps ENV=dev
 make verify ENV=dev
 ```
 
-For private repositories, register repository credentials in ArgoCD before
-applying the root Application:
+For private repositories, register an ArgoCD deploy key before applying the root
+Application:
 
 ```bash
 make configure-argocd-repository ENV=dev SSH_KEY_FILE=~/.ssh/argocd_deploy_key
 ```
 
-## Optional Services
+## Documentation
 
-Observability can be enabled or disabled per environment in
-`gitops/environments/<env>/environment.json`.
+- [Configuration](docs/configuration.md)
+- [Deployment](docs/deployment.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Example application](app/README.md)
 
-The example application workload type is selected in the environment values
-file:
-
-```yaml
-workload:
-  mode: stateless
-```
-
-Use `stateful` to render a `StatefulSet` with a `gp3` persistent volume claim
-per pod.
-
-This repository currently provisions PostgreSQL through the `rds` module. It
-does not currently include Redis, MySQL, Aurora, MSK, OpenSearch, DocumentDB, or
-a service catalog layer.
-
-## Destroy
-
-Delete Kubernetes-managed resources before destroying Terraform-managed AWS
-infrastructure:
+## Validation Commands
 
 ```bash
-make destroy-gitops ENV=dev
-make destroy ENV=dev
+make fmt-check
+make validate ENV=dev
+make check
+terraform -chdir=terraform/foundation init -backend=false
+terraform -chdir=terraform/foundation validate
 ```
 
-The destroy order matters because Kubernetes controllers can create AWS
-resources such as load balancers.
+The GitHub workflow also runs TFLint, Checkov, Ruff, ShellCheck, Helm lint,
+Helm template, kubeconform, actionlint, markdownlint, and Gitleaks.
 
-## Limitations
+## Scope And Limitations
 
-This repository has not been fully end-to-end verified in this workspace after
-the multi-account role change. Static checks pass, and the live plan now depends
-on an assumable `deployment_role_arn`.
+- The example app is a stateless Deployment connected to PostgreSQL on RDS.
+- The project does not deploy a complete production operating model.
+- The `production` environment files are examples of stricter defaults, not a
+  claim that the repository is production-ready.
+- Real AWS behavior still depends on account limits, IAM permissions, regional
+  service availability, certificate setup, quotas, and current AWS pricing.
+- Destroy Kubernetes-managed resources before destroying Terraform-managed AWS
+  infrastructure, because Kubernetes controllers can create AWS load balancers.
 
-The project does not provide:
+## Disclaimer
 
-- a prebuilt cross-account role bootstrap;
-- private EKS API connectivity such as VPN or Direct Connect;
-- application CI secrets or deploy keys;
-- backup restore runbooks;
-- production incident response procedures;
-- cost controls beyond the documented small dev defaults.
+This repository is a personal learning and practice project.
+
+It is provided as-is and is not a production-ready platform, managed
+service, official reference architecture, or guarantee of any particular
+technical or operational outcome.
+
+The configuration has not been validated for every AWS account, region,
+workload, security requirement, availability requirement, or cost profile.
+
+Review and adapt all infrastructure, IAM, networking, security, database,
+backup, monitoring, and operational settings before using any part of the
+project outside a disposable environment.
+
+AWS resources created by this project may incur charges.
+
+No guarantee is made regarding correctness, security, availability,
+compatibility, cost, or operational outcome.

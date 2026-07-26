@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 SKIP_DIRS = {".git", ".terraform", "__pycache__", "node_modules"}
+EXPECTED_PLACEHOLDERS = {"docs/images/architecture.png"}
 
 
 def is_external(target):
@@ -28,8 +29,12 @@ def main():
                 target = target.split()[0].strip("<>")
                 if is_external(target) or not target:
                     continue
+                local_target = target.split("#")[0]
+                relative_target = (path.parent / local_target).resolve().relative_to(ROOT)
+                if str(relative_target) in EXPECTED_PLACEHOLDERS:
+                    continue
                 # Strip any anchor; headings are not validated.
-                resolved = (path.parent / target.split("#")[0]).resolve()
+                resolved = (path.parent / local_target).resolve()
                 if not resolved.exists():
                     broken.append(f"{path.relative_to(ROOT)}:{line_number}: {target}")
 

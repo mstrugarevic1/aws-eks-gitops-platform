@@ -8,7 +8,7 @@ metadata:
 spec:
   project: "default"
   source:
-    repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
+    repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
     targetRevision: "main"
     path: "gitops/environments/staging/apps"
   destination:

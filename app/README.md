@@ -3,9 +3,6 @@
 Minimal workload used to exercise the platform end to end. It is not a real
 application and is not meant to grow into one.
 
-The chart can render this app as either a stateless `Deployment` or a stateful
-`StatefulSet`. Set `workload.mode` in the environment values file.
-
 | Endpoint   | Purpose                                                        |
 | ---------- | -------------------------------------------------------------- |
 | `/`        | service info as JSON                                            |

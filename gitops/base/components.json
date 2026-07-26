@@ -1,13 +1,6 @@
 {
   "components": [
     {
-      "name": "storageclass",
-      "enabledKey": "addons.storageclass",
-      "wave": -10,
-      "namespaceKey": "system",
-      "source": { "path": "deploy/storage" }
-    },
-    {
       "name": "metrics-server",
       "enabledKey": "addons.metricsServer",
       "wave": -5,
@@ -70,7 +63,7 @@
       "namespaceKey": "observability",
       "createNamespace": true,
       "valueFiles": [
-        "../../deploy/observability/victoria-metrics-k8s-stack-values.yaml",
+        "gitops/addons/observability/victoria-metrics-k8s-stack-values.yaml",
         "values/vm-stack-values.yaml"
       ],
       "source": {
@@ -85,7 +78,7 @@
       "wave": 10,
       "namespaceKey": "observability",
       "createNamespace": true,
-      "valueFiles": ["../../deploy/observability/loki-values.yaml"],
+      "valueFiles": ["gitops/addons/observability/loki-values.yaml"],
       "source": {
         "chart": "loki",
         "repoURL": "https://grafana.github.io/helm-charts",
@@ -98,7 +91,7 @@
       "wave": 10,
       "namespaceKey": "observability",
       "createNamespace": true,
-      "valueFiles": ["../../deploy/observability/promtail-values.yaml"],
+      "valueFiles": ["gitops/addons/observability/promtail-values.yaml"],
       "source": {
         "chart": "promtail",
         "repoURL": "https://grafana.github.io/helm-charts",
@@ -112,7 +105,7 @@
       "namespaceKey": "observability",
       "createNamespace": true,
       "source": {
-        "path": "deploy/observability",
+        "path": "gitops/addons/observability",
         "include": "{grafana-dashboard-*.yaml,grafana-datasources.yaml}"
       }
     },

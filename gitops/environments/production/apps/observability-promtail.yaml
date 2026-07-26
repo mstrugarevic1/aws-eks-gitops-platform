@@ -25,8 +25,8 @@ spec:
       targetRevision: "6.17.1"
       helm:
         valueFiles:
-          - "$values/../../deploy/observability/promtail-values.yaml"
+          - "$values/gitops/addons/observability/promtail-values.yaml"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
+      repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"

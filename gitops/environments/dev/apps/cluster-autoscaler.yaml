@@ -25,6 +25,6 @@ spec:
         valueFiles:
           - "$values/gitops/environments/dev/values/cluster-autoscaler-values.yaml"
     -
-      repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
+      repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
       targetRevision: "main"
       ref: "values"

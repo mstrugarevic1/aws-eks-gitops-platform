@@ -176,14 +176,14 @@ build-app:
 render-observability:
 	helm template vm-stack vm/victoria-metrics-k8s-stack \
 		--namespace observability \
-		--values deploy/observability/victoria-metrics-k8s-stack-values.yaml \
+		--values gitops/addons/observability/victoria-metrics-k8s-stack-values.yaml \
 		>/tmp/vm-stack-rendered.yaml
 	helm template loki grafana/loki \
 		--namespace observability \
-		--values deploy/observability/loki-values.yaml \
+		--values gitops/addons/observability/loki-values.yaml \
 		>/tmp/loki-rendered.yaml
 	helm template promtail grafana/promtail \
 		--namespace observability \
-		--values deploy/observability/promtail-values.yaml \
+		--values gitops/addons/observability/promtail-values.yaml \
 		>/tmp/promtail-rendered.yaml
 	@echo "Rendered observability manifests to /tmp/vm-stack-rendered.yaml, /tmp/loki-rendered.yaml, /tmp/promtail-rendered.yaml"

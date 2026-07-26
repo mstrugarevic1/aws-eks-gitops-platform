@@ -19,8 +19,8 @@ spec:
     syncOptions:
       - "CreateNamespace=true"
   source:
-    repoURL: "git@github.com:mstrugarevic1/eks-gitops-platform.git"
+    repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
     targetRevision: "main"
-    path: "deploy/observability"
+    path: "gitops/addons/observability"
     directory:
       include: "{grafana-dashboard-*.yaml,grafana-datasources.yaml}"
