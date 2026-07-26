@@ -1,5 +1,9 @@
 # EKS GitOps Platform: Troubleshooting
 
+Use this document after a specific command fails or a live check returns an
+unexpected result. For first-time setup and value selection, start with
+`docs/deployment.md` and `docs/configuration.md`.
+
 ## Wrong AWS Account
 
 **Symptom.** `make plan` fails with:

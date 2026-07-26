@@ -3,6 +3,10 @@
 Environment-specific values live in `terraform/environments/*.tfvars`.
 The shared Terraform root is `terraform/stack`.
 
+Use this document before deployment when choosing environment values. Use
+`docs/troubleshooting.md` only after a command fails or a live check is
+unexpected.
+
 Create a real, ignored tfvars file from an example:
 
 ```bash

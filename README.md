@@ -117,9 +117,9 @@ kubeconform, actionlint, markdownlint, and Gitleaks.
 
 ## Documentation
 
-- [Configuration](docs/configuration.md)
-- [Deployment](docs/deployment.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Deployment](docs/deployment.md): command order for creating an environment
+- [Configuration](docs/configuration.md): what to put in environment tfvars and GitOps config
+- [Troubleshooting](docs/troubleshooting.md): symptom-driven fixes when a deployment step fails
 - [Sample application](app/README.md)
 
 ## Cleanup
