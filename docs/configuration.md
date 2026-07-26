@@ -60,6 +60,18 @@ database_subnet_cidrs = [
 ]
 ```
 
+Use a CIDR calculator such as `ipcalc` when choosing ranges:
+
+```bash
+ipcalc 10.10.0.0/16
+```
+
+Keep VPC and subnet CIDRs unique across `dev`, `staging`, and `production`.
+Overlapping ranges are fine only while environments are fully isolated. They
+become a problem if you later add connectivity between accounts or VPCs through
+peering, Transit Gateway, VPN, Direct Connect, shared services, or centralized
+operations access.
+
 `nat_gateway_strategy = "single"` is the lower-cost dev path. Use `per_az` when
 you want one NAT gateway per Availability Zone.
 
