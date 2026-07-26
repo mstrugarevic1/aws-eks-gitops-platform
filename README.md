@@ -17,25 +17,17 @@ validate the platform end to end.
 Each environment has its own Terraform variables, Terraform backend, AWS
 resources, GitOps environment config, and rendered ArgoCD Applications.
 
-Terraform creates the AWS side:
-
-- VPC, public, private, and database subnets, routing, and NAT;
-- EKS cluster and managed node groups;
-- AWS Client VPN;
-- RDS PostgreSQL;
-- ECR;
-- Secrets Manager entries;
-- IAM and IRSA roles;
-- CloudWatch resources.
-
-ArgoCD manages the Kubernetes side:
-
-- AWS Load Balancer Controller;
-- Cluster Autoscaler;
-- External Secrets Operator;
-- metrics-server;
-- Grafana, VictoriaMetrics, Loki, and Promtail;
-- sample application.
+| Terraform | ArgoCD |
+| --- | --- |
+| VPC, public, private, and database subnets | AWS Load Balancer Controller |
+| Routing and NAT | Cluster Autoscaler |
+| EKS cluster and managed node groups | External Secrets Operator |
+| AWS Client VPN | metrics-server |
+| RDS PostgreSQL | Grafana, VictoriaMetrics, Loki, and Promtail |
+| ECR | sample application |
+| Secrets Manager entries | |
+| IAM and IRSA roles | |
+| CloudWatch resources | |
 
 ## Architecture
 
