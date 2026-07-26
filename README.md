@@ -31,7 +31,7 @@ resources, GitOps environment config, and rendered ArgoCD Applications.
 
 ## Architecture
 
-![AWS EKS GitOps platform architecture](architecture.png)
+![AWS EKS GitOps platform architecture](docs/images/architecture.png)
 
 ## Environments
 
@@ -118,7 +118,6 @@ needed:
   and image repository values before applying an environment.
 - Validate the full flow in real AWS accounts for `dev`, `staging`, and
   `production`.
-- Add the final architecture diagram if `architecture.png` changes.
 
 ## Disclaimer
 
