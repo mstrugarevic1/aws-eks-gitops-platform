@@ -52,6 +52,36 @@ client_vpn = {
 The deployment role and ACM certificates must already exist in the target AWS
 account.
 
+If you do not already have Client VPN certificates, generate them outside this
+repository and import them into ACM in the same Region as the VPN endpoint:
+
+```bash
+git clone https://github.com/OpenVPN/easy-rsa.git /tmp/easy-rsa
+cd /tmp/easy-rsa/easyrsa3
+./easyrsa init-pki
+./easyrsa build-ca nopass
+./easyrsa --san=DNS:server build-server-full server nopass
+./easyrsa build-client-full client1.domain.tld nopass
+
+mkdir -p /tmp/client-vpn-pki
+cp pki/ca.crt /tmp/client-vpn-pki/
+cp pki/issued/server.crt /tmp/client-vpn-pki/
+cp pki/private/server.key /tmp/client-vpn-pki/
+cp pki/issued/client1.domain.tld.crt /tmp/client-vpn-pki/
+cp pki/private/client1.domain.tld.key /tmp/client-vpn-pki/
+cd /tmp/client-vpn-pki
+
+aws acm import-certificate \
+  --certificate fileb://server.crt \
+  --private-key fileb://server.key \
+  --certificate-chain fileb://ca.crt
+```
+
+Use the returned ACM certificate ARN for both `server_certificate_arn` and
+`root_certificate_chain_arn` when the server and client certificates are signed
+by the same CA. Keep `client1.domain.tld.crt` and `client1.domain.tld.key`
+outside git; the VPN client needs them with the exported `.ovpn` profile.
+
 ## 3. Bootstrap Terraform State
 
 ```bash
@@ -79,9 +109,15 @@ ECR, IAM and CloudWatch resources that match the stack configuration.
 # Export the VPN profile after Terraform creates the Client VPN endpoint.
 aws ec2 export-client-vpn-client-configuration \
   --client-vpn-endpoint-id "$(cd terraform/stack && terraform output -raw client_vpn_endpoint_id)" \
-  --output text > client-vpn-dev.ovpn
+  --output text > /tmp/client-vpn-dev.ovpn
 
-# Import client-vpn-dev.ovpn into AWS VPN Client, then connect the VPN.
+# Add the client certificate and key paths before importing the profile.
+cat >> /tmp/client-vpn-dev.ovpn <<'EOF'
+cert /tmp/client-vpn-pki/client1.domain.tld.crt
+key /tmp/client-vpn-pki/client1.domain.tld.key
+EOF
+
+# Import /tmp/client-vpn-dev.ovpn into AWS VPN Client, then connect the VPN.
 
 # Write kubeconfig for the private EKS endpoint.
 make kubeconfig ENV=dev

@@ -95,7 +95,8 @@ operator or VPN egress CIDR.
 ## Client VPN
 
 Client VPN is certificate-authenticated. Terraform references ACM certificate
-ARNs; it does not create or store private keys:
+ARNs; it does not create or store private keys. Generate or import the
+certificates before applying the stack:
 
 ```hcl
 client_vpn = {
@@ -107,6 +108,9 @@ client_vpn = {
   dns_servers                = []
 }
 ```
+
+When the server and client certificates are signed by the same CA, AWS Client
+VPN can use the server certificate ARN for both certificate fields.
 
 The VPN security group is allowed to reach the private EKS API and RDS. Public
 application traffic should enter through Kubernetes Ingress and the AWS Load

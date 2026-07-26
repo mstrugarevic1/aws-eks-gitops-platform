@@ -28,6 +28,7 @@ override.tf.json
 *.key
 *.crt
 *.p12
+*.ovpn
 kubeconfig*
 *.kubeconfig
 argocd-repo-key*
