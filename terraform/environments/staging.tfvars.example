@@ -51,6 +51,4 @@ rds_skip_final_snapshot   = false
 ecr_force_delete         = false
 app_secret_recovery_days = 30
 
-alb_controller_version = "v3.4.2"
-
 alarm_email = ""

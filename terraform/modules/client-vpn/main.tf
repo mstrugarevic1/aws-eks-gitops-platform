@@ -26,7 +26,9 @@ resource "aws_ec2_client_vpn_endpoint" "this" {
   }
 
   connection_log_options {
-    enabled = false
+    enabled               = var.connection_logging.enabled
+    cloudwatch_log_group  = var.connection_logging.cloudwatch_log_group != "" ? var.connection_logging.cloudwatch_log_group : null
+    cloudwatch_log_stream = var.connection_logging.cloudwatch_log_stream != "" ? var.connection_logging.cloudwatch_log_stream : null
   }
 
   tags = { Name = "${var.name}-client-vpn" }

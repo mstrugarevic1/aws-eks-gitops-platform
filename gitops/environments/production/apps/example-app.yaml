@@ -20,7 +20,7 @@ spec:
       - "CreateNamespace=true"
   source:
     repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
-    targetRevision: "main"
+    targetRevision: "production"
     path: "gitops/apps/example-app/chart"
     helm:
       valueFiles:

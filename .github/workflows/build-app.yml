@@ -9,6 +9,11 @@ on:
         description: "Environment whose ECR repository receives the image"
         required: true
         default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
       tag:
         description: "Image tag, for example 0.1.1"
         required: true
@@ -19,6 +24,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     permissions:
       contents: read
       # Only this job needs a token to assume the AWS role.

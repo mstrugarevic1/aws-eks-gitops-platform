@@ -26,5 +26,5 @@ spec:
           - "$values/gitops/environments/production/values/aws-load-balancer-controller-values.yaml"
     -
       repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
-      targetRevision: "main"
+      targetRevision: "production"
       ref: "values"

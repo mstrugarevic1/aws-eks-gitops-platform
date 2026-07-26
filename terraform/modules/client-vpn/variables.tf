@@ -42,3 +42,12 @@ variable "dns_servers" {
   type        = list(string)
   description = "DNS servers pushed to VPN clients."
 }
+
+variable "connection_logging" {
+  type = object({
+    enabled               = bool
+    cloudwatch_log_group  = string
+    cloudwatch_log_stream = string
+  })
+  description = "Client VPN connection logging settings."
+}

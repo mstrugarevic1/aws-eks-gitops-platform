@@ -74,6 +74,8 @@ make plan ENV=dev
 # Apply the AWS infrastructure.
 make apply ENV=dev
 
+# Connect the AWS Client VPN first because the EKS API endpoint is private.
+
 # Configure kubectl for the new EKS cluster.
 make kubeconfig ENV=dev
 
@@ -136,10 +138,12 @@ needed:
 ./bootstrap/destroy-bootstrap.sh my-platform dev us-east-1 DELETE_TERRAFORM_BACKEND
 ```
 
-## Pending Improvements
+## Before Deployment
 
 - Replace placeholder AWS account IDs, certificate ARNs, VPC IDs, role ARNs,
   and image repository values before applying an environment.
+- Create the `production` Git branch or change the production GitOps
+  `targetRevision` to an immutable release tag or commit SHA before applying it.
 - Validate the full flow in real AWS accounts for `dev`, `staging`, and
   `production`.
 

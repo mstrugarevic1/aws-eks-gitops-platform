@@ -65,7 +65,5 @@ rds_skip_final_snapshot = true
 ecr_force_delete         = true
 app_secret_recovery_days = 0
 
-alb_controller_version = "v3.4.2"
-
 # Email for CloudWatch alarm notifications. Leave empty to skip the subscription.
 alarm_email = ""

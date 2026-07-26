@@ -23,5 +23,5 @@ spec:
       targetRevision: "3.13.1"
     -
       repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
-      targetRevision: "main"
+      targetRevision: "production"
       ref: "values"

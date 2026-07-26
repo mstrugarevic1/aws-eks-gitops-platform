@@ -1,7 +1,7 @@
 {
   "name": "production",
   "repoURL": "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git",
-  "targetRevision": "main",
+  "targetRevision": "production",
   "destinationServer": "https://kubernetes.default.svc",
   "argocdNamespace": "argocd",
   "aws": {

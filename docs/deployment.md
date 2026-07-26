@@ -135,6 +135,10 @@ make gitops-validate ENV=dev
 This writes Terraform outputs such as cluster name, region, VPC ID, role ARNs,
 ECR URL and the secret path into `gitops/environments/dev/environment.json`.
 
+Production GitOps is configured to track the `production` branch by default.
+Create that branch or change `targetRevision` to the release tag or commit SHA
+you want ArgoCD to reconcile.
+
 Commit and push the GitOps changes:
 
 ```bash

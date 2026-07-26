@@ -110,6 +110,31 @@ variable "client_vpn" {
   }
 }
 
+variable "client_vpn_connection_logging" {
+  type = object({
+    enabled               = bool
+    cloudwatch_log_group  = string
+    cloudwatch_log_stream = string
+  })
+  description = "Optional Client VPN connection logging. When enabled, provide an existing CloudWatch log group and stream."
+  default = {
+    enabled               = false
+    cloudwatch_log_group  = ""
+    cloudwatch_log_stream = ""
+  }
+
+  validation {
+    condition = (
+      !var.client_vpn_connection_logging.enabled ||
+      (
+        var.client_vpn_connection_logging.cloudwatch_log_group != "" &&
+        var.client_vpn_connection_logging.cloudwatch_log_stream != ""
+      )
+    )
+    error_message = "Client VPN connection logging requires a CloudWatch log group and stream when enabled."
+  }
+}
+
 variable "rds_instance_class" {
   type = string
 }
@@ -172,9 +197,4 @@ variable "ecr_force_delete" {
 variable "app_secret_recovery_days" {
   type        = number
   description = "Secrets Manager recovery window for the application secret. 0 deletes immediately for disposable environments; 7-30 keeps a recovery window."
-}
-
-variable "alb_controller_version" {
-  type        = string
-  description = "AWS Load Balancer Controller release used to fetch the official IAM policy. Must match the chart version in gitops/base/components.json."
 }

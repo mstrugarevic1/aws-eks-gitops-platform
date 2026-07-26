@@ -60,6 +60,7 @@ module "client_vpn" {
   root_certificate_chain_arn = var.client_vpn.root_certificate_chain_arn
   split_tunnel               = var.client_vpn.split_tunnel
   dns_servers                = var.client_vpn.dns_servers
+  connection_logging         = var.client_vpn_connection_logging
 }
 
 # RDS generates and stores the master password in Secrets Manager, so no
@@ -138,16 +139,11 @@ resource "aws_iam_role_policy" "eso" {
   policy = data.aws_iam_policy_document.eso.json
 }
 
-# IRSA role for the AWS Load Balancer Controller. The permissions policy is the
-# official one for the controller version pinned in gitops/base/components.json
-# (chart 3.4.2 ships controller v3.4.2). Bump both together.
-data "http" "alb_controller_policy" {
-  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${var.alb_controller_version}/docs/install/iam_policy.json"
-}
-
 resource "aws_iam_policy" "alb_controller" {
-  name   = "${local.name}-alb-controller"
-  policy = data.http.alb_controller_policy.response_body
+  name = "${local.name}-alb-controller"
+  # Keep this policy aligned with the AWS Load Balancer Controller chart version
+  # in gitops/base/components.json.
+  policy = file("${path.module}/policies/aws-load-balancer-controller-v3.4.2.json")
 }
 
 data "aws_iam_policy_document" "alb_controller_assume" {

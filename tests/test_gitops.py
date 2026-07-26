@@ -202,6 +202,9 @@ class ValidationTest(unittest.TestCase):
         prune = gitops.env_config("production")["syncPolicy"]["automated"].get("prune", False)
         self.assertFalse(prune)
 
+    def test_production_does_not_track_main(self):
+        self.assertNotEqual(gitops.env_config("production")["targetRevision"], "main")
+
     def test_no_environment_references_another_environment(self):
         others = set(gitops.registered_envs())
         for name in gitops.registered_envs():

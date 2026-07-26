@@ -75,9 +75,7 @@ jobs:
           python-version: "3.12"
       - run: pip install checkov==3.2.334
       - name: checkov
-        run: |
-          checkov --directory terraform --quiet --compact --framework terraform \
-            --skip-check CKV_AWS_23,CKV_AWS_26,CKV_AWS_37,CKV_AWS_38,CKV_AWS_58,CKV_AWS_118,CKV_AWS_129,CKV_AWS_136,CKV_AWS_149,CKV_AWS_161,CKV_AWS_226,CKV_AWS_353,CKV_AWS_354,CKV_AWS_356,CKV2_AWS_11,CKV2_AWS_12,CKV2_AWS_30,CKV2_AWS_57,CKV2_AWS_60
+        run: checkov --config-file .checkov.yml
 
   shell:
     runs-on: ubuntu-latest
@@ -179,7 +177,7 @@ jobs:
           fetch-depth: 0
 
       - name: actionlint
-        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.4 -color
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
 
       - name: markdownlint
         run: npx --yes markdownlint-cli2@0.14.0 "**/*.md"

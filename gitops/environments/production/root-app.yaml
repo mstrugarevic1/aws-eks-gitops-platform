@@ -9,7 +9,7 @@ spec:
   project: "default"
   source:
     repoURL: "git@github.com:mstrugarevic1/aws-eks-gitops-platform.git"
-    targetRevision: "main"
+    targetRevision: "production"
     path: "gitops/environments/production/apps"
   destination:
     server: "https://kubernetes.default.svc"

@@ -1,0 +1,44 @@
+directory: terraform
+framework: terraform
+quiet: true
+compact: true
+
+skip-check:
+  # ALB and Kubernetes security groups need IPv4 ingress for public workloads.
+  - CKV_AWS_23
+  # SNS encryption is skipped for disposable alarm email topics.
+  - CKV_AWS_26
+  # RDS encryption defaults are intentionally environment-specific here.
+  - CKV_AWS_37
+  # RDS public access is controlled by module configuration and subnet placement.
+  - CKV_AWS_38
+  # EKS secrets encryption is skipped to keep the learning stack smaller.
+  - CKV_AWS_58
+  # EKS API logging is intentionally not forced for every environment.
+  - CKV_AWS_118
+  # ECR KMS encryption is skipped for the sample application repository.
+  - CKV_AWS_129
+  # ECR image scanning is managed by the repository settings, not CI.
+  - CKV_AWS_136
+  # RDS KMS key selection is left to each environment.
+  - CKV_AWS_149
+  # RDS deletion protection is disabled in disposable dev examples.
+  - CKV_AWS_161
+  # ALB access logging is not required for the sample ingress path.
+  - CKV_AWS_226
+  # RDS performance insights is optional for this learning stack.
+  - CKV_AWS_353
+  # RDS IAM authentication is not used by the sample application.
+  - CKV_AWS_354
+  # EKS control plane logging is not enabled by default to avoid extra cost.
+  - CKV_AWS_356
+  # VPC flow logs are not enabled by default to avoid extra cost.
+  - CKV2_AWS_11
+  # Default security group handling is delegated to the network module.
+  - CKV2_AWS_12
+  # WAF is intentionally omitted from the sample ingress path.
+  - CKV2_AWS_30
+  # Secrets Manager rotation is not configured for the sample application.
+  - CKV2_AWS_57
+  # ECR lifecycle policy is unnecessary for the small sample app repository.
+  - CKV2_AWS_60

@@ -112,6 +112,17 @@ The VPN security group is allowed to reach the private EKS API and RDS. Public
 application traffic should enter through Kubernetes Ingress and the AWS Load
 Balancer Controller.
 
+Client VPN connection logging is disabled by default. Enable it only after
+creating the CloudWatch log group and stream:
+
+```hcl
+client_vpn_connection_logging = {
+  enabled               = true
+  cloudwatch_log_group  = "/aws/client-vpn/my-platform-production"
+  cloudwatch_log_stream = "connections"
+}
+```
+
 Node group sizing is also explicit:
 
 ```hcl
