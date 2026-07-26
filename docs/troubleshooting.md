@@ -117,7 +117,7 @@ shows `Ready=False`.
 
 ```bash
 kubectl -n external-secrets logs deploy/external-secrets --tail=50
-kubectl -n app describe externalsecret example-app
+kubectl -n example-app describe externalsecret example-app
 ```
 
 **Fix.** Run:

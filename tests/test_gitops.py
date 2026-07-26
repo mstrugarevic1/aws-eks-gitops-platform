@@ -136,6 +136,30 @@ class SecretTest(unittest.TestCase):
         self.assertEqual(external_secret["metadata"]["namespace"], env["namespaces"]["app"])
 
 
+class ConfigureValuesTest(unittest.TestCase):
+    def test_terraform_outputs_update_environment_config(self):
+        env = env_fixture()
+        outputs = {
+            "cluster": "my-platform-dev",
+            "vpc": "vpc-abc123",
+            "alb_arn": "arn:aws:iam::123456789012:role/alb",
+            "ca_arn": "arn:aws:iam::123456789012:role/ca",
+            "eso_arn": "arn:aws:iam::123456789012:role/eso",
+            "grafana_arn": "arn:aws:iam::123456789012:role/grafana",
+            "ecr_url": "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-platform-dev/example-app",
+            "secret_path": "my-platform/dev/example-app",
+            "region": "us-east-1",
+        }
+
+        updated = gitops.apply_outputs(env, outputs)
+
+        self.assertEqual(updated["aws"]["accountId"], "123456789012")
+        self.assertEqual(updated["aws"]["vpcId"], "vpc-abc123")
+        self.assertEqual(updated["aws"]["roles"]["externalSecrets"], outputs["eso_arn"])
+        self.assertEqual(updated["exampleApp"]["image"]["repository"], outputs["ecr_url"])
+        self.assertEqual(updated["exampleApp"]["secretManagerPath"], outputs["secret_path"])
+
+
 class UnresolvedTest(unittest.TestCase):
     def test_placeholders_are_detected(self):
         for value in (

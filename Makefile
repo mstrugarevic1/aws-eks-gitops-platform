@@ -94,28 +94,13 @@ configure-app-secret:
 	./scripts/configure-app-secret.sh $(ENV)
 
 configure-gitops-values:
-	@set -e; \
-	CLUSTER="$$(cd $(TF_DIR) && terraform output -raw eks_cluster_name)"; \
-	VPC="$$(cd $(TF_DIR) && terraform output -raw vpc_id)"; \
-	ALB_ARN="$$(cd $(TF_DIR) && terraform output -raw alb_controller_role_arn)"; \
-	CA_ARN="$$(cd $(TF_DIR) && terraform output -raw cluster_autoscaler_role_arn)"; \
-	ESO_ARN="$$(cd $(TF_DIR) && terraform output -raw eso_role_arn)"; \
-	GRAFANA_ARN="$$(cd $(TF_DIR) && terraform output -raw grafana_cloudwatch_role_arn)"; \
-	ECR_URL="$$(cd $(TF_DIR) && terraform output -raw ecr_repository_url)"; \
-	SECRET_PATH="$$(cd $(TF_DIR) && terraform output -raw app_secret_name)"; \
-	REGION="$$(cd $(TF_DIR) && terraform output -raw aws_region)"; \
-	CLUSTER="$$CLUSTER" VPC="$$VPC" ALB_ARN="$$ALB_ARN" CA_ARN="$$CA_ARN" ESO_ARN="$$ESO_ARN" GRAFANA_ARN="$$GRAFANA_ARN" ECR_URL="$$ECR_URL" SECRET_PATH="$$SECRET_PATH" AWS_REGION="$$REGION" ENV="$(ENV)" \
-	python3 -c 'import json,os,pathlib; p=pathlib.Path("gitops/environments")/os.environ["ENV"]/ "environment.json"; d=json.loads(p.read_text()); account=os.environ["ALB_ARN"].split(":")[4]; d["aws"]["accountId"]=account; d["aws"]["clusterName"]=os.environ["CLUSTER"]; d["aws"]["region"]=os.environ["AWS_REGION"]; d["aws"]["vpcId"]=os.environ["VPC"]; d["aws"]["roles"]["awsLoadBalancerController"]=os.environ["ALB_ARN"]; d["aws"]["roles"]["clusterAutoscaler"]=os.environ["CA_ARN"]; d["aws"]["roles"]["externalSecrets"]=os.environ["ESO_ARN"]; d["aws"]["roles"]["grafanaCloudWatch"]=os.environ["GRAFANA_ARN"]; d["exampleApp"]["image"]["repository"]=os.environ["ECR_URL"]; d["exampleApp"]["secretManagerPath"]=os.environ["SECRET_PATH"]; p.write_text(json.dumps(d, indent=2) + "\n")'
-	$(MAKE) gitops-render ENV=$(ENV)
-	@echo "Updated $(GITOPS_ENV_DIR)/environment.json and rendered ArgoCD manifests"
+	python3 scripts/gitops.py configure-values $(ENV)
 
 # Point an environment at a specific image tag. ECR repositories use immutable
 # tags, so every build gets its own tag and this is what promotes it.
 set-image-tag:
 	@test -n "$(TAG)" || { echo "usage: make set-image-tag ENV=<env> TAG=<tag>"; exit 1; }
-	@ENV="$(ENV)" TAG="$(TAG)" python3 -c 'import json,os,pathlib; p=pathlib.Path("gitops/environments")/os.environ["ENV"]/ "environment.json"; d=json.loads(p.read_text()); d["exampleApp"]["image"]["tag"]=os.environ["TAG"]; p.write_text(json.dumps(d, indent=2) + "\n")'
-	$(MAKE) gitops-render ENV=$(ENV)
-	@echo "$(ENV) now points at image tag $(TAG); commit and push for ArgoCD to see it"
+	python3 scripts/gitops.py set-image-tag $(ENV) $(TAG)
 
 gitops-render:
 	python3 scripts/gitops.py render $(ENV)

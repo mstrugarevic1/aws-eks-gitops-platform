@@ -2,12 +2,14 @@
 import json
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPONENTS_FILE = ROOT / "gitops/base/components.json"
 REGISTRY_FILE = ROOT / "gitops/environments/environments.json"
+TF_DIR = ROOT / "terraform/stack"
 
 
 def load_json(path):
@@ -299,6 +301,58 @@ def render(env_name):
         )
 
 
+def write_env_config(env_name, env):
+    path = env_dir(env_name) / "environment.json"
+    path.write_text(json.dumps(env, indent=2) + "\n")
+
+
+def terraform_output(name, tf_dir=TF_DIR):
+    return subprocess.check_output(
+        ["terraform", f"-chdir={tf_dir}", "output", "-raw", name],
+        text=True,
+    ).strip()
+
+
+def apply_outputs(env, outputs):
+    env["aws"]["accountId"] = outputs["alb_arn"].split(":")[4]
+    env["aws"]["clusterName"] = outputs["cluster"]
+    env["aws"]["region"] = outputs["region"]
+    env["aws"]["vpcId"] = outputs["vpc"]
+    env["aws"]["roles"]["awsLoadBalancerController"] = outputs["alb_arn"]
+    env["aws"]["roles"]["clusterAutoscaler"] = outputs["ca_arn"]
+    env["aws"]["roles"]["externalSecrets"] = outputs["eso_arn"]
+    env["aws"]["roles"]["grafanaCloudWatch"] = outputs["grafana_arn"]
+    env["exampleApp"]["image"]["repository"] = outputs["ecr_url"]
+    env["exampleApp"]["secretManagerPath"] = outputs["secret_path"]
+    return env
+
+
+def configure_values(env_name):
+    env = env_config(env_name)
+    outputs = {
+        "cluster": terraform_output("eks_cluster_name"),
+        "vpc": terraform_output("vpc_id"),
+        "alb_arn": terraform_output("alb_controller_role_arn"),
+        "ca_arn": terraform_output("cluster_autoscaler_role_arn"),
+        "eso_arn": terraform_output("eso_role_arn"),
+        "grafana_arn": terraform_output("grafana_cloudwatch_role_arn"),
+        "ecr_url": terraform_output("ecr_repository_url"),
+        "secret_path": terraform_output("app_secret_name"),
+        "region": terraform_output("aws_region"),
+    }
+    write_env_config(env_name, apply_outputs(env, outputs))
+    render(env_name)
+    print(f"Updated {env_dir(env_name) / 'environment.json'} and rendered ArgoCD manifests")
+
+
+def set_image_tag(env_name, tag):
+    env = env_config(env_name)
+    env["exampleApp"]["image"]["tag"] = tag
+    write_env_config(env_name, env)
+    render(env_name)
+    print(f"{env_name} now points at image tag {tag}; commit and push for ArgoCD to see it")
+
+
 def unresolved(value):
     if isinstance(value, dict):
         return any(unresolved(v) for v in value.values())
@@ -418,13 +472,20 @@ def validate(env_name):
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in {"render", "validate"}:
-        raise SystemExit("usage: scripts/gitops.py render|validate [env]")
+    commands = {"render", "validate", "configure-values", "set-image-tag"}
+    if len(sys.argv) < 2 or sys.argv[1] not in commands:
+        raise SystemExit("usage: scripts/gitops.py render|validate|configure-values|set-image-tag [env] [tag]")
     env_name = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("ENV", "dev")
     if sys.argv[1] == "render":
         render(env_name)
-    else:
+    elif sys.argv[1] == "validate":
         validate(env_name)
+    elif sys.argv[1] == "configure-values":
+        configure_values(env_name)
+    else:
+        if len(sys.argv) < 4:
+            raise SystemExit("usage: scripts/gitops.py set-image-tag <env> <tag>")
+        set_image_tag(env_name, sys.argv[3])
 
 
 if __name__ == "__main__":
